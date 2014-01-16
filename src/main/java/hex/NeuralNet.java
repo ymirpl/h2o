@@ -5,7 +5,10 @@ import jsr166y.CountedCompleter;
 import water.*;
 import water.H2O.H2OCountedCompleter;
 import water.Job.ValidatedJob;
-import water.api.*;
+import water.api.DocGen;
+import water.api.Progress2;
+import water.api.Request;
+import water.api.RequestServer;
 import water.fvec.*;
 import water.util.D3Plot;
 import water.util.Log;
@@ -376,26 +379,26 @@ public class NeuralNet extends ValidatedJob {
       }
     };
     trainer.start();
-    monitor.start();
+   // monitor.start();
     trainer.join();
 
-    // Gracefully terminate the job submitted via H2O web API
-    if (mode != MapReduce) {
-      running = false; //tell the monitor thread to finish too
-      try {
-        monitor.join();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    } else {
-      while (running) { //MapReduce will inform us that running = false
-        try {
-          Thread.sleep(1);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-    }
+//    // Gracefully terminate the job submitted via H2O web API
+//    if (mode != MapReduce) {
+//      running = false; //tell the monitor thread to finish too
+//      try {
+//        monitor.join();
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
+//    } else {
+//      while (running) { //MapReduce will inform us that running = false
+//        try {
+//          Thread.sleep(1);
+//        } catch (InterruptedException e) {
+//          e.printStackTrace();
+//        }
+//      }
+//    }
 
     // remove this job -> stop H2O interface from refreshing
     H2OCountedCompleter task = _fjtask;
@@ -1113,6 +1116,8 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed = new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
+      System.out.println("getRNG called");
+      Thread.dumpStack();
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());
     }
   }
