@@ -15,6 +15,7 @@ import water.util.Utils;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Neural network.
@@ -135,6 +136,7 @@ public class NeuralNet extends ValidatedJob {
 
   void startTrain() {
     running = true;
+    RNG.seed.set(seed);
     Vec[] vecs = Utils.append(_train, response);
     reChunk(vecs);
     final Vec[] train = new Vec[vecs.length - 1];
@@ -974,6 +976,17 @@ public class NeuralNet extends ValidatedJob {
         t._domain = vecs[v]._domain;
         vecs[v] = t;
       }
+    }
+  }
+
+  // Make a differently seeded random generator every time someone asks for one
+  public static class RNG {
+    // Atomicity is not really needed here (since in multi-threaded operation, the weights are simultaneously updated),
+    // but it is still done for posterity since it's cheap (and to be able to count the number of actual getRNG() calls)
+    public static AtomicLong seed = new AtomicLong(new Random().nextLong());
+
+    public static Random getRNG() {
+      return water.util.Utils.getDeterRNG(seed.getAndIncrement());
     }
   }
 }
