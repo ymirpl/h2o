@@ -983,7 +983,7 @@ public class NeuralNet extends ValidatedJob {
   public static class RNG {
     // Atomicity is not really needed here (since in multi-threaded operation, the weights are simultaneously updated),
     // but it is still done for posterity since it's cheap (and to be able to count the number of actual getRNG() calls)
-    public static AtomicLong seed = new AtomicLong(new Random().nextLong());
+    public static AtomicLong seed; //= new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());

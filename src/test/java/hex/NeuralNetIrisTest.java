@@ -1,8 +1,6 @@
 package hex;
 
-import hex.Layer.Loss;
-import hex.Layer.VecSoftmax;
-import hex.Layer.VecsInput;
+import hex.Layer.*;
 import hex.rng.MersenneTwisterRNG;
 import junit.framework.Assert;
 import org.junit.BeforeClass;
@@ -19,8 +17,7 @@ import water.util.Log;
 import water.util.Utils;
 
 import java.io.File;
-
-import static hex.Layer.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class NeuralNetIrisTest extends TestUtil {
   static final String PATH = "smalldata/iris/iris.csv";
@@ -60,6 +57,7 @@ public class NeuralNetIrisTest extends TestUtil {
           rows[shuffle] = rows[i];
           rows[i] = row;
         }
+        NeuralNet.RNG.seed = new AtomicLong(0xDEADBEEF);
 
         int limit = (int) frame.numRows() * 80 / 100;
         _train = frame(null, Utils.subarray(rows, 0, limit));
