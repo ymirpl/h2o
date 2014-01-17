@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -140,13 +141,17 @@ public abstract class Trainer {
     final Base[] _trainers;
     final Thread[] _threads;
     final long _stepsPerThread;
+    static final CyclicBarrier DONE = new CyclicBarrier(1);
+    volatile CyclicBarrier _suspend;
+    final CyclicBarrier _resume;
     final AtomicLong _processed = new AtomicLong();
 
     public Threaded(Layer[] ls, double epochs, final Key job) {
       final int num_threads = Runtime.getRuntime().availableProcessors();
       _trainers = new Base[num_threads];
       _threads = new Thread[num_threads];
-      _stepsPerThread = (long) (epochs * ((Input) ls[0])._len / num_threads);
+      _stepsPerThread = (long) (epochs * (double)((Input) ls[0])._len / num_threads);
+      _resume = new CyclicBarrier(_threads.length + 1);
 
       Log.info("Starting " + num_threads + " threads.");
       for( int t = 0; t < num_threads; t++ ) {
@@ -169,8 +174,19 @@ public abstract class Trainer {
         _threads[t] = new Thread("H2O Trainer " + t) {
           @Override public void run() {
             for( long i = 0; _stepsPerThread == 0 || i < _stepsPerThread; i++ ) {
+              CyclicBarrier b = _suspend;
+              if( b == DONE )
+                break;
               if( Job.cancelled(job) )
                 break;
+              if( b != null ) {
+                try {
+                  b.await();
+                  _resume.await();
+                } catch( Exception e ) {
+                  throw new RuntimeException(e);
+                }
+              }
               trainer.step();
               input.move();
               _processed.incrementAndGet();
@@ -202,6 +218,27 @@ public abstract class Trainer {
       }
     }
 
+    public void cancel() {
+      _suspend = DONE;
+  }
+
+    void suspend() {
+      try {
+        _suspend = new CyclicBarrier(_threads.length + 1);
+        _suspend.await();
+        _suspend = null;
+      } catch( Exception e ) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    void resume() {
+      try {
+        _resume.await();
+      } catch( Exception e ) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   /**
