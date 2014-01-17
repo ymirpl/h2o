@@ -69,7 +69,7 @@ public class NeuralNet extends ValidatedJob {
   public double epochs = 10;
 
   @API(help = "Seed for random numbers (reproducible results for single-threaded only, cf. Hogwild)", filter = Default.class, json = true)
-  public final long seed = new Random().nextLong();
+  public long seed = new Random().nextLong();
 
   @API(help = "Enable expert mode", filter = Default.class, json = false)
   public boolean expert_mode = false;
@@ -1116,8 +1116,6 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed = new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
-      System.out.println("getRNG called");
-      Thread.dumpStack();
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());
     }
   }
