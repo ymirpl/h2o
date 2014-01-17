@@ -379,26 +379,26 @@ public class NeuralNet extends ValidatedJob {
       }
     };
     trainer.start();
-   // monitor.start();
+    monitor.start();
     trainer.join();
 
-//    // Gracefully terminate the job submitted via H2O web API
-//    if (mode != MapReduce) {
-//      running = false; //tell the monitor thread to finish too
-//      try {
-//        monitor.join();
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
-//    } else {
-//      while (running) { //MapReduce will inform us that running = false
-//        try {
-//          Thread.sleep(1);
-//        } catch (InterruptedException e) {
-//          e.printStackTrace();
-//        }
-//      }
-//    }
+    // Gracefully terminate the job submitted via H2O web API
+    if (mode != MapReduce) {
+      running = false; //tell the monitor thread to finish too
+      try {
+          monitor.join();
+        } catch (InterruptedException e) {
+    e.printStackTrace();
+      }
+    } else {
+      while (running) { //MapReduce will inform us that running = false
+      try {
+          Thread.sleep(1);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    }
 
     // remove this job -> stop H2O interface from refreshing
     H2OCountedCompleter task = _fjtask;
