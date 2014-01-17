@@ -136,7 +136,7 @@ public class NeuralNet extends ValidatedJob {
 
   void startTrain() {
     running = true;
-    RNG.seed.set(seed);
+    RNG.seed = new AtomicLong(seed);
     Vec[] vecs = Utils.append(_train, response);
     reChunk(vecs);
     final Vec[] train = new Vec[vecs.length - 1];
@@ -378,7 +378,7 @@ public class NeuralNet extends ValidatedJob {
       clones[y] = ls[y].clone();
     clones[clones.length - 1] = output;
     for( int y = 0; y < clones.length; y++ )
-      clones[y].init(clones, y, false, 0, null);
+      clones[y].init(clones, y, false, 0);
     Layer.shareWeights(ls, clones);
     return eval(clones, n, cm);
   }
@@ -616,7 +616,7 @@ public class NeuralNet extends ValidatedJob {
       for( int y = 0; y < clones.length; y++ ) {
         clones[y]._w = weights[y];
         clones[y]._b = biases[y];
-        clones[y].init(clones, y, false, 0, null);
+        clones[y].init(clones, y, false, 0);
       }
       ((Input) clones[0])._pos = rowInChunk;
       for (Layer clone : clones) clone.fprop(false);

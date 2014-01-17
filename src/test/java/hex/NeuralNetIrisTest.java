@@ -31,6 +31,8 @@ public class NeuralNetIrisTest extends TestUtil {
 
     Activation[] activations = { Activation.Tanh, Activation.RectifierWithDropout };
     Loss[] losses = { Loss.MeanSquare, Loss.CrossEntropy };
+    //Activation[] activations = { Activation.Tanh };
+    //Loss[] losses = { Loss.MeanSquare };
 
     for (Activation activation : activations) {
       for (Loss loss : losses) {
@@ -87,10 +89,17 @@ public class NeuralNetIrisTest extends TestUtil {
 
         for( int i = 0; i < ls.length; i++ ) {
           ls[i].rate = rate;
+          ls[i].max_w2 = 10;
+          ls[i].l1 = 0.001f;
+          ls[i].l2 = 0.001f;
+          ls[i].momentum_start = 0.5f;
+          ls[i].momentum_ramp = 100000;
+          ls[i].momentum_stable = 0.99f;
           ls[i].loss = (i == 2) ? loss : Loss.CrossEntropy; //always use cross-entropy for hidden layers
           ls[i].max_w2 = Float.MAX_VALUE; //effectively turning this feature off
 //      ls[i].initial_weight_distribution = Layer.InitialWeightDistribution.Uniform;
 //      ls[i].initial_weight_scale = 0.01f;
+          System.out.println("Initializing " + ls[i].getClass().getSimpleName() + NeuralNet.RNG.seed.get());
           ls[i].init(ls, i);
         }
 

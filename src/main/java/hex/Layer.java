@@ -8,6 +8,8 @@ import water.fvec.Vec;
 
 import java.util.Random;
 
+import static hex.NeuralNet.RNG.getRNG;
+
 /**
  * Neural network layer.
  *
@@ -92,11 +94,10 @@ public abstract class Layer extends Iced {
 
   public final void init(Layer[] ls, int index) {
     //init(ls, index, true, 0, new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS));
-    init(ls, index, true, 0,
-            NeuralNet.RNG.getRNG());
+    init(ls, index, true, 0);
   }
 
-  public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
+  public void init(Layer[] ls, int index, boolean weights, long step) {
     _a = new float[units];
     if (!(this instanceof Output)) {
       _e = new float[units];
@@ -238,7 +239,7 @@ public abstract class Layer extends Iced {
     @ParamsSearch.Ignore
     protected long _pos, _len;
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
       _a = new float[units];
     }
 
@@ -466,10 +467,10 @@ public abstract class Layer extends Iced {
   public static abstract class Softmax extends Output {
     protected abstract int target();
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       if( weights ) {
-        randomize(rand, 4.0f);
+        randomize(getRNG(), 4.0f);
       }
     }
 
@@ -648,10 +649,10 @@ public abstract class Layer extends Iced {
       this.units = units;
     }
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       if( weights ) {
-        randomize(rand, 1.0f);
+        randomize(getRNG(), 1.0f);
       }
     }
 
@@ -701,15 +702,15 @@ public abstract class Layer extends Iced {
     @Override public Layer clone() {
       //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
       //_rand = new Random(NeuralNet.seed);
-      _rand = NeuralNet.RNG.getRNG();
+      _rand = getRNG();
       _bits = new byte[(units + 7) / 8];
       return super.clone();
     }
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       if( weights ) {
-        randomize(rand, 1.0f);
+        randomize(getRNG(), 1.0f);
       }
     }
 
@@ -725,7 +726,7 @@ public abstract class Layer extends Iced {
       if( _rand == null ) {
         //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
         //_rand = new Random(NeuralNet.seed);
-        _rand = NeuralNet.RNG.getRNG();
+        _rand = getRNG();
         _bits = new byte[(units + 7) / 8];
       }
       _rand.nextBytes(_bits);
@@ -788,8 +789,8 @@ public abstract class Layer extends Iced {
       this.units = units;
     }
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       // Auto encoder has it's own bias vector
       _b = new float[units];
     }
@@ -840,10 +841,10 @@ public abstract class Layer extends Iced {
       this.units = units;
     }
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       if( weights ) {
-        randomize(rand, 4.0f);
+        randomize(getRNG(), 4.0f);
         for( int i = 0; i < _b.length; i++ )
           _b[i] = 1;
       }
@@ -853,7 +854,7 @@ public abstract class Layer extends Iced {
       if( _rand == null ) {
         //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
         //_rand = new Random(NeuralNet.seed);
-        _rand = NeuralNet.RNG.getRNG();
+        _rand = getRNG();
         _bits = new byte[units / 8 + 1];
       }
       _rand.nextBytes(_bits);
@@ -899,10 +900,10 @@ public abstract class Layer extends Iced {
       this.units = units;
     }
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       if( weights ) {
-        randomize(rand, 1.0f);
+        randomize(getRNG(), 1.0f);
         for( int i = 0; i < _b.length; i++ )
           _b[i] = 1;
       }
@@ -950,7 +951,7 @@ public abstract class Layer extends Iced {
     @Override public Layer clone() {
       //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
       //_rand = new Random(NeuralNet.seed);
-      _rand = NeuralNet.RNG.getRNG();
+      _rand = getRNG();
       _bits = new byte[(units + 7) / 8];
       return super.clone();
     }
@@ -959,7 +960,7 @@ public abstract class Layer extends Iced {
       if( _rand == null ) {
         //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
         //_rand = new Random(NeuralNet.seed);
-        _rand = NeuralNet.RNG.getRNG();
+        _rand = getRNG();
         _bits = new byte[(units + 7) / 8];
       }
       _rand.nextBytes(_bits);
@@ -998,8 +999,8 @@ public abstract class Layer extends Iced {
       this.units = units;
     }
 
-    @Override public void init(Layer[] ls, int index, boolean weights, long step, Random rand) {
-      super.init(ls, index, weights, step, rand);
+    @Override public void init(Layer[] ls, int index, boolean weights, long step) {
+      super.init(ls, index, weights, step);
       // Auto encoder has it's own bias vector
       _b = new float[units];
       for( int i = 0; i < _b.length; i++ )
@@ -1067,7 +1068,7 @@ public abstract class Layer extends Iced {
   }
 
   private static double rand(Random rand, double min, double max) {
-    return min + rand.nextDouble() * (max - min);
+    return min + rand.nextFloat() * (max - min);
   }
 
   @Override public AutoBuffer writeJSON(AutoBuffer bb) {

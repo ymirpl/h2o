@@ -18,7 +18,7 @@ public class JUnitRunnerDebug {
   public static void main(String[] args) throws Exception {
     int[] ports = new int[NODES];
     for( int i = 0; i < ports.length; i++ )
-      ports[i] = 54321 + i * 2;
+      ports[i] = 54323 + i * 2;
 
     String flat = "";
     for( int i = 0; i < ports.length; i++ )
