@@ -59,7 +59,7 @@ public class NeuralNetIrisTest extends TestUtil {
         }
         NeuralNet.RNG.seed = new AtomicLong(0xDEADBEEF);
 
-        int limit = (int) frame.numRows() * 80 / 100;
+        int limit = (int) (frame.numRows() * 0.8f);
         _train = frame(null, Utils.subarray(rows, 0, limit));
         _test = frame(null, Utils.subarray(rows, limit, (int) frame.numRows() - limit));
         UKV.remove(pars);
