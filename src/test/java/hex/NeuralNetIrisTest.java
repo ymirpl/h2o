@@ -37,8 +37,10 @@ public class NeuralNetIrisTest extends TestUtil {
     // Testing different things
     // Note: Microsoft reference implementation is only for Tanh + MSE, rectifier and MCE are implemented by 0xdata (trivial).
     // Note: Initial weight distributions are copied, but what is tested is the stability behavior.
-    NeuralNet.Activation[] activations = { NeuralNet.Activation.Tanh, NeuralNet.Activation.RectifierWithDropout };
+    NeuralNet.Activation[] activations = { NeuralNet.Activation.Tanh, NeuralNet.Activation.RectifierWithDropout};
     Loss[] losses = { NeuralNet.Loss.MeanSquare, NeuralNet.Loss.CrossEntropy };
+//    NeuralNet.Activation[] activations = { NeuralNet.Activation.Tanh};
+//    Loss[] losses = { NeuralNet.Loss.MeanSquare};
     NeuralNet.InitialWeightDistribution[] dists = {
             //NeuralNet.InitialWeightDistribution.Normal,
             //NeuralNet.InitialWeightDistribution.Uniform,
@@ -98,18 +100,18 @@ public class NeuralNetIrisTest extends TestUtil {
               p.input_dropout_ratio = 0.2f;
               p.epochs = 1000;
               p.activation = activation;
-              p.max_w2 = Float.MAX_VALUE;
+              p.max_w2 = 10;
               p.rate = 0.01f;
               p.epochs = 1000;
               p.activation = activation;
               p.max_w2 = Float.MAX_VALUE;
               p.input_dropout_ratio = 0;
               p.rate_annealing = 0;
-              p.l1 = 0;
-              p.l2 = 0;
-              p.momentum_start = 0;
-              p.momentum_ramp = 0;
-              p.momentum_stable = 0;
+              p.l1 = 0.001;
+              p.l2 = 0.001;
+              p.momentum_start = 0.5f;
+              p.momentum_ramp = 100000;
+              p.momentum_stable = 0.99f;
               p.initial_weight_distribution = dist;
               p.initial_weight_scale = scale;
 
@@ -131,6 +133,7 @@ public class NeuralNetIrisTest extends TestUtil {
               ls[2] = new VecSoftmax(labels, null, loss);
 
               for( int i = 0; i < ls.length; i++ ) {
+                System.out.println("Initializing " + ls[i].getClass().getSimpleName() + NeuralNet.RNG.seed.get());
                 ls[i].init(ls, i, p);
               }
 

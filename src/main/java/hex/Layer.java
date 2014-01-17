@@ -119,11 +119,11 @@ public abstract class Layer extends Iced {
 
     private Dropout(int units) {
       _bits = new byte[(units+7)/8];
-      _rand = getRNG();
     }
 
     // for input layer
     private void clearSomeInput() {
+      if (_rand == null) _rand = getRNG();
       assert(_previous.isInput());
       final double rate = ((Input)_previous)._dropout_rate;
       for( int i = 0; i < _previous._a.length; i++ ) {
@@ -133,6 +133,7 @@ public abstract class Layer extends Iced {
 
     // for hidden layers
     private void fillBytes() {
+      if (_rand == null) _rand = getRNG();
       _rand.nextBytes(_bits);
     }
 
