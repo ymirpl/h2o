@@ -112,10 +112,11 @@ public class NeuralNetIrisTest extends TestUtil {
         trainer.run();
 
         // Make sure outputs are equal
-        float epsilon = 1e-5f;
+        float epsilon = 1e-4f;
         for( int o = 0; o < ls[2]._a.length; o++ ) {
           float a = ref._nn.outputs[o];
           float b = ls[2]._a[o];
+          System.out.println("output[" + o + "] = " + b);
           Assert.assertEquals(a, b, epsilon);
         }
 
@@ -125,6 +126,7 @@ public class NeuralNetIrisTest extends TestUtil {
           for( int i = 0; i < l._previous._a.length; i++ ) {
             float a = ref._nn.ihWeights[i][o];
             float b = l._w[o * l._previous._a.length + i];
+            System.out.println("weight[" + o * l._previous._a.length + i + "] = " + b);
             Assert.assertEquals(a, b, epsilon);
           }
         }
