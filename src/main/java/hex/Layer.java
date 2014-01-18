@@ -700,7 +700,7 @@ public abstract class Layer extends Iced {
     @Override public Layer clone() {
       //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
       //_rand = new Random(NeuralNet.seed);
-      //_rand = NeuralNet.RNG.getRNG();
+      _rand = NeuralNet.RNG.getRNG();
       _bits = new byte[(units + 7) / 8];
       return super.clone();
     }
@@ -946,23 +946,22 @@ public abstract class Layer extends Iced {
     }
 
     // keep random generators thread-local
-//    @Override public Layer clone() {
-//      //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
-//      //_rand = new Random(NeuralNet.seed);
-//      _rand = NeuralNet.RNG.getRNG();
-//      _bits = new byte[(units + 7) / 8];
-//      return super.clone();
-//    }
+    @Override public Layer clone() {
+      //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
+      //_rand = new Random(NeuralNet.seed);
+      _rand = NeuralNet.RNG.getRNG();
+      _bits = new byte[(units + 7) / 8];
+      return super.clone();
+    }
 
     @Override protected void fprop(boolean training) {
       if( _rand == null ) {
         //_rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
         //_rand = new Random(NeuralNet.seed);
-        if (training) _rand = NeuralNet.RNG.getRNG();
+        _rand = NeuralNet.RNG.getRNG();
         _bits = new byte[(units + 7) / 8];
       }
-      if (training)
-        _rand.nextBytes(_bits);
+      _rand.nextBytes(_bits);
 
       // input dropout: set some input layer feature values to 0
       if (_previous.isInput() && training) {
