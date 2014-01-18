@@ -343,13 +343,15 @@ public class NeuralNet extends ValidatedJob {
     monitor.start();
     trainer.join();
 
-//    for (int l=1; l<ls.length; l++) {
-//    int l = 1;
-//      for (int w=0; w<ls[l]._w.length; ++w) {
-//        if (w % 100 == 0)
-//        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
-//      }
-//    }
+    for (int l=1; l<ls.length; l++) {
+      for (int w=0; w<ls[l]._w.length; ++w) {
+        if (w % 100 == 0)
+        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
+      }
+      for (int a=0; a<ls[l]._a.length; ++a) {
+        System.out.println("Activation " + l + " [" + a + "] = " + ls[l]._a[a]);
+      }
+    }
 
     // hack to gracefully terminate the job submitted via H2O web API
     if (mode != ExecutionMode.MapReduce_Hogwild) {
@@ -806,7 +808,12 @@ public class NeuralNet extends ValidatedJob {
         for( int i = trains.length - 1; i >= 0; i-- ) {
           sb.append("<tr>");
           sb.append("<td>" + PrettyPrint.msecs(trains[i].training_time_ms, true) + "</td>");
-          sb.append("<td>" + String.format("%,d", trains[i].training_samples) + "</td>");
+          if( model.validation_errors != null ) {
+            sb.append("<td>" + String.format("%,d", model.validation_errors[i].training_samples) + "</td>");
+          }
+          else {
+            sb.append("<td>" + String.format("%,d", trains[i].training_samples) + "</td>");
+          }
           sb.append("<td>" + String.format(mse_format, trains[i].mean_square) + "</td>");
           sb.append("<td>" + String.format(cross_entropy_format, trains[i].cross_entropy) + "</td>");
           sb.append("<td>" + format(trains[i].classification) + "</td>");
@@ -1003,7 +1010,10 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed; //= new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
+      Thread.dumpStack();
+      System.out.println("seed: " + seed.get());
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());
+      //return water.util.Utils.getDeterRNG(seed.get());
     }
   }
 }
