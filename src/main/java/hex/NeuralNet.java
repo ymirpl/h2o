@@ -1003,8 +1003,7 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed; //= new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
-      //return water.util.Utils.getDeterRNG(seed.getAndIncrement());
-      return water.util.Utils.getDeterRNG(seed.get());
+      return water.util.Utils.getDeterRNG(seed.getAndIncrement());
     }
   }
 }
