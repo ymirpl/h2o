@@ -186,6 +186,10 @@ public class NeuralNet extends ValidatedJob {
     ls[ls.length - 1].l2 = (float) l2;
     ls[ls.length - 1].max_w2 = max_w2;
     ls[ls.length - 1].loss = loss;
+    ls[ls.length - 1].momentum_start = (float) momentum_start;
+    ls[ls.length - 1].momentum_ramp = momentum_ramp;
+    ls[ls.length - 1].momentum_stable = (float) momentum_stable;
+
 
     for( int i = 0; i < ls.length; i++ )
       ls[i].init(ls, i);
