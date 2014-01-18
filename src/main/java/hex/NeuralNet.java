@@ -209,14 +209,14 @@ public class NeuralNet extends ValidatedJob {
   void startTrain() {
     RNG.seed = new AtomicLong(seed);
     running = true;
-//    Vec[] vecs = Utils.append(_train, response);
-//    reChunk(vecs);
-//    final Vec[] train = new Vec[vecs.length - 1];
-//    System.arraycopy(vecs, 0, train, 0, train.length);
-//    final Vec trainResp = classification ? vecs[vecs.length - 1].toEnum() : vecs[vecs.length - 1];
+    Vec[] vecs = Utils.append(_train, response);
+    reChunk(vecs);
+    final Vec[] train = new Vec[vecs.length - 1];
+    System.arraycopy(vecs, 0, train, 0, train.length);
+    final Vec trainResp = classification ? vecs[vecs.length - 1].toEnum() : vecs[vecs.length - 1];
 
-    final Vec[] train = _train;
-    final Vec trainResp = classification ? response.toEnum() : response;
+//    final Vec[] train = _train;
+//    final Vec trainResp = classification ? response.toEnum() : response;
 
     final Layer[] ls = new Layer[hidden.length + 2];
     ls[0] = new VecsInput(train, null, input_dropout_ratio);
