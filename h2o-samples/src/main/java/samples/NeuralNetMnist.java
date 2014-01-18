@@ -4,7 +4,6 @@ import hex.Layer;
 import hex.Layer.VecSoftmax;
 import hex.Layer.VecsInput;
 import hex.NeuralNet;
-import hex.NeuralNet.Errors;
 import hex.Trainer;
 import hex.rng.MersenneTwisterRNG;
 import water.Job;
@@ -23,6 +22,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -31,11 +31,11 @@ import java.util.zip.GZIPInputStream;
 public class NeuralNetMnist extends Job {
   public static void main(String[] args) throws Exception {
     Class job = NeuralNetMnist.class;
-//    samples.launchers.CloudLocal.launch(job, 1);
+    samples.launchers.CloudLocal.launch(job, 1);
 //    samples.launchers.CloudProcess.launch(job, 4);
     //samples.launchers.CloudConnect.launch(job, "localhost:54321");
 //    samples.launchers.CloudRemote.launchIPs(job, "192.168.1.161", "192.168.1.162", "192.168.1.163", "192.168.1.164");
-    samples.launchers.CloudRemote.launchIPs(job, "192.168.1.161", "192.168.1.163", "192.168.1.164");
+//    samples.launchers.CloudRemote.launchIPs(job, "192.168.1.161", "192.168.1.163", "192.168.1.164");
     //samples.launchers.CloudRemote.launchEC2(job, 4);
   }
 
@@ -64,8 +64,8 @@ public class NeuralNetMnist extends Job {
 
   protected Layer[] build(Vec[] data, Vec labels, VecsInput inputStats, VecSoftmax outputStats) {
     Layer[] ls = new Layer[5];
-    //ls[0] = new VecsInput(data, inputStats, 0.2);
-    ls[0] = new VecsInput(data, inputStats);
+    ls[0] = new VecsInput(data, inputStats, 0.2);
+    //ls[0] = new VecsInput(data, inputStats);
 //    ls[1] = new Layer.Tanh(50);
 //    ls[2] = new Layer.Tanh(50);
     ls[1] = new Layer.RectifierDropout(102);
@@ -74,9 +74,10 @@ public class NeuralNetMnist extends Job {
     ls[4] = new VecSoftmax(labels, outputStats, NeuralNet.Loss.CrossEntropy);
 
     NeuralNet p = new NeuralNet();
+    NeuralNet.RNG.seed = new AtomicLong(0xDEADBEEF);
     p.rate = 0.003f;
     p.rate_annealing = 1e-6f;
-    p.epochs = 1000;
+    p.epochs = 10;
     p.activation = NeuralNet.Activation.RectifierWithDropout;
     p.max_w2 = 15;
     p.momentum_start = 0.5f;
@@ -93,19 +94,19 @@ public class NeuralNetMnist extends Job {
   }
 
   protected void startTraining(Layer[] ls) {
-    double epochs = 1000.0;
+    double epochs = 1.0;
 
 //    // Single-thread SGD
-//    System.out.println("Single-threaded\n");
-//    _trainer = new Trainer.Direct(ls, epochs, self());
+    System.out.println("Single-threaded\n");
+    _trainer = new Trainer.Direct(ls, epochs, self());
 
     // Single-node parallel
 //    System.out.println("Multi-threaded\n");
 //    _trainer = new Trainer.Threaded(ls, epochs, self());
 
     // Distributed parallel
-    System.out.println("MapReduce\n");
-    _trainer = new Trainer.MapReduce(ls, epochs, self()); //this will call cancel() and abort the whole run
+//    System.out.println("MapReduce\n");
+//    _trainer = new Trainer.MapReduce(ls, epochs, self()); //this will call cancel() and abort the whole run
 
     _trainer.start();
   }
@@ -139,11 +140,11 @@ public class NeuralNetMnist extends Job {
           String text = (int) time + "s, " + processed + " samples (" + (ps) + "/s) ";
 
           // Build separate nets for scoring purposes, use same normalization stats as for training
-          Layer[] temp = build(train, trainLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
-          Layer.shareWeights(ls, temp);
+//          Layer[] temp = build(train, trainLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
+//          Layer.shareWeights(ls, temp);
           // Estimate training error on subset of dataset for speed
-          Errors e = NeuralNet.eval(temp, 1000, null);
-          text += "train: " + e;
+//          Errors e = NeuralNet.eval(temp, 1000, null);
+//          text += "train: " + e;
           text += ", rate: ";
           text += String.format("%.5g", ls[0].rate(processed));
           text += ", momentum: ";
@@ -151,10 +152,10 @@ public class NeuralNetMnist extends Job {
           System.out.println(text);
           if( (evals.incrementAndGet() % 1) == 0 ) {
             System.out.println("Computing test error");
-            temp = build(test, testLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
-            Layer.shareWeights(ls, temp);
-            e = NeuralNet.eval(temp, 0, null);
-            System.out.println("Test error: " + e);
+//            temp = build(test, testLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
+//            Layer.shareWeights(ls, temp);
+//            e = NeuralNet.eval(temp, 0, null);
+//            System.out.println("Test error: " + e);
           }
         }
       }

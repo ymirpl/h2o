@@ -15,7 +15,6 @@ import water.util.Log;
 import water.util.RString;
 import water.util.Utils;
 
-import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -299,97 +298,105 @@ public class NeuralNet extends ValidatedJob {
     final NeuralNet nn = this;
 
     // Use a separate thread for monitoring (blocked most of the time)
-    Thread monitor = new Thread() {
-      Errors[] trainErrors = trainErrors0, validErrors = validErrors0;
-
-      @Override public void run() {
-        try {
-          Vec[] valid = null;
-          Vec validResp = null;
-          if( validation != null ) {
-            assert adapted != null;
-            final Vec[] vs = adapted[0].vecs();
-            valid = Arrays.copyOf(vs, vs.length - 1);
-            System.arraycopy(adapted[0].vecs(), 0, valid, 0, valid.length);
-            validResp = vs[vs.length - 1];
-          }
-          //score the model every 2 seconds (or less often, if it takes longer to score)
-          final long num_samples_total = (long)(Math.ceil(num_rows * epochs));
-          long num = -1, last_eval = runTimeMs();
-          do {
-            final long interval = (long)(score_interval * 1000); //time between evaluations
-            long time_taken = runTimeMs() - last_eval;
-            if (num >= 0 && time_taken < interval) {
-              Thread.sleep(interval - time_taken);
-            }
-            last_eval = runTimeMs();
-            num = eval(valid, validResp);
-
-            if (num >= num_samples_total) break;
-            if (mode != MapReduce) {
-              if (cancelled() || !running) break;
-            } else {
-              if (!running) break; //MapReduce calls cancel() early, we are waiting for running = false
-            }
-          } while (true);
-
-          // remove validation data
-          if( adapted != null && adapted[1] != null )
-            adapted[1].remove();
-          Log.info("Training finished.");
-        } catch( Exception ex ) {
-          cancel(ex);
-        }
-      }
-
-      private long eval(Vec[] valid, Vec validResp) {
-        long[][] cm = null;
-        if( classification ) {
-          int classes = ls[ls.length - 1].units;
-          cm = new long[classes][classes];
-        }
-        NeuralNetModel model = new NeuralNetModel(destination_key, sourceKey, frame, ls, nn);
-
-        // score model on training set
-        Errors e = eval(train, trainResp, score_training, valid == null ? cm : null);
-        e.score_training = score_training == 0 ? train[0].length() : score_training;
-        trainErrors = Utils.append(trainErrors, e);
-        model.unstable |= Double.isNaN(e.mean_square) || Double.isNaN(e.cross_entropy);
-        model.training_errors = trainErrors;
-
-        // score model on validation set
-        if( valid != null ) {
-          e = eval(valid, validResp, score_validation, cm);
-          e.score_validation = score_validation == 0 ? valid[0].length() : score_validation;
-          validErrors = Utils.append(validErrors, e);
-          model.unstable |= Double.isNaN(e.mean_square) || Double.isNaN(e.cross_entropy);
-        }
-        model.validation_errors = validErrors;
-
-        model.confusion_matrix = cm;
-        UKV.put(model._selfKey, model);
-        return e.training_samples;
-      }
-
-      private Errors eval(Vec[] vecs, Vec resp, long n, long[][] cm) {
-        Errors e = NeuralNet.eval(ls, vecs, resp, n, cm);
-        e.training_samples = trainer.processed();
-        e.training_time_ms = runTimeMs();
-        return e;
-      }
-    };
+//    Thread monitor = new Thread() {
+//      Errors[] trainErrors = trainErrors0, validErrors = validErrors0;
+//
+//      @Override public void run() {
+//        try {
+//          Vec[] valid = null;
+//          Vec validResp = null;
+//          if( validation != null ) {
+//            assert adapted != null;
+//            final Vec[] vs = adapted[0].vecs();
+//            valid = Arrays.copyOf(vs, vs.length - 1);
+//            System.arraycopy(adapted[0].vecs(), 0, valid, 0, valid.length);
+//            validResp = vs[vs.length - 1];
+//          }
+//          //score the model every 2 seconds (or less often, if it takes longer to score)
+//          final long num_samples_total = (long)(Math.ceil(num_rows * epochs));
+//          long num = -1, last_eval = runTimeMs();
+//          do {
+//            final long interval = (long)(score_interval * 1000); //time between evaluations
+//            long time_taken = runTimeMs() - last_eval;
+//            if (num >= 0 && time_taken < interval) {
+//              Thread.sleep(interval - time_taken);
+//            }
+//            last_eval = runTimeMs();
+//            num = eval(valid, validResp);
+//
+//            if (num >= num_samples_total) break;
+//            if (mode != MapReduce) {
+//              if (cancelled() || !running) break;
+//            } else {
+//              if (!running) break; //MapReduce calls cancel() early, we are waiting for running = false
+//            }
+//          } while (true);
+//
+//          // remove validation data
+//          if( adapted != null && adapted[1] != null )
+//            adapted[1].remove();
+//          Log.info("Training finished.");
+//        } catch( Exception ex ) {
+//          cancel(ex);
+//        }
+//      }
+//
+//      private long eval(Vec[] valid, Vec validResp) {
+//        long[][] cm = null;
+//        if( classification ) {
+//          int classes = ls[ls.length - 1].units;
+//          cm = new long[classes][classes];
+//        }
+//        NeuralNetModel model = new NeuralNetModel(destination_key, sourceKey, frame, ls, nn);
+//
+//        // score model on training set
+//        Errors e = eval(train, trainResp, score_training, valid == null ? cm : null);
+//        e.score_training = score_training == 0 ? train[0].length() : score_training;
+//        trainErrors = Utils.append(trainErrors, e);
+//        model.unstable |= Double.isNaN(e.mean_square) || Double.isNaN(e.cross_entropy);
+//        model.training_errors = trainErrors;
+//
+//        // score model on validation set
+//        if( valid != null ) {
+//          e = eval(valid, validResp, score_validation, cm);
+//          e.score_validation = score_validation == 0 ? valid[0].length() : score_validation;
+//          validErrors = Utils.append(validErrors, e);
+//          model.unstable |= Double.isNaN(e.mean_square) || Double.isNaN(e.cross_entropy);
+//        }
+//        model.validation_errors = validErrors;
+//
+//        model.confusion_matrix = cm;
+//        UKV.put(model._selfKey, model);
+//        return e.training_samples;
+//      }
+//
+//      private Errors eval(Vec[] vecs, Vec resp, long n, long[][] cm) {
+//        Errors e = NeuralNet.eval(ls, vecs, resp, n, cm);
+//        e.training_samples = trainer.processed();
+//        e.training_time_ms = runTimeMs();
+//        return e;
+//      }
+//    };
     trainer.start();
-    monitor.start();
+    //monitor.start();
     trainer.join();
+
+    int l = 1;
+//    for (int l=1; l<ls.length; l++) {
+      for (int w=0; w<ls[l]._w.length; ++w) {
+        if (w % 100 == 0)
+        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
+      }
+//    }
 
     // Gracefully terminate the job submitted via H2O web API
     if (mode != MapReduce) {
       running = false; //tell the monitor thread to finish too
-      try {
-          monitor.join();
-        } catch (InterruptedException e) {
-    e.printStackTrace();
-      }
+//      try {
+//          monitor.join();
+//        } catch (InterruptedException e) {
+//    e.printStackTrace();
+//      }
     } else {
       while (running) { //MapReduce will inform us that running = false
       try {
@@ -1113,10 +1120,11 @@ public class NeuralNet extends ValidatedJob {
   public static class RNG {
     // Atomicity is not really needed here (since in multi-threaded operation, the weights are simultaneously updated),
     // but it is still done for posterity since it's cheap (and to be able to count the number of actual getRNG() calls)
-    public static AtomicLong seed = new AtomicLong(new Random().nextLong());
+    public static AtomicLong seed; // = new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
-      return water.util.Utils.getDeterRNG(seed.getAndIncrement());
+      //return water.util.Utils.getDeterRNG(seed.getAndIncrement());
+      return water.util.Utils.getDeterRNG(seed.get());
     }
   }
 }
