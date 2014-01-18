@@ -4,7 +4,6 @@ import hex.Layer;
 import hex.Layer.VecSoftmax;
 import hex.Layer.VecsInput;
 import hex.NeuralNet;
-import hex.NeuralNet.Errors;
 import hex.Trainer;
 import hex.rng.MersenneTwisterRNG;
 import water.Job;
@@ -24,6 +23,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -62,24 +62,32 @@ public class NeuralNetMnist extends Job {
     }
     train = trainf.vecs();
     test = testf.vecs();
-    NeuralNet.reChunk(train);
+    //NeuralNet.reChunk(train);
   }
 
   protected Layer[] build(Vec[] data, Vec labels, VecsInput inputStats, VecSoftmax outputStats) {
-    Layer[] ls = new Layer[3];
+    Layer[] ls = new Layer[5];
     ls[0] = new VecsInput(data, inputStats, 0.2);
 //    ls[1] = new Layer.Tanh(500);
 //    ls[1] = new Layer.TanhDropout(500);
-    ls[1] = new Layer.RectifierDropout(500);
-    ls[2] = new VecSoftmax(labels, outputStats);
+    ls[1] = new Layer.RectifierDropout(102);
+    ls[2] = new Layer.RectifierDropout(102);
+    ls[3] = new Layer.RectifierDropout(204);
+    ls[4] = new VecSoftmax(labels, outputStats);
+
+    NeuralNet.RNG.seed = new AtomicLong(0xDEADBEEF);
     for( int i = 0; i < ls.length; i++ ) {
-      ls[i].initial_weight_distribution = Layer.InitialWeightDistribution.Normal;
-      ls[i].initial_weight_scale = 0.01;
-      ls[i].rate = .005f;
+      ls[i].initial_weight_distribution = Layer.InitialWeightDistribution.UniformAdaptive;
+      //ls[i].initial_weight_scale = 0.01;
+      ls[i].rate = .003f;
       ls[i].rate_annealing = 1 / 1e6f;
-      ls[i].l2 = .001f;
+      ls[i].l1 = .00001f;
+      ls[i].l2 = 0.00f;
       ls[i].max_w2 = 15; //cf. hinton for Mnist
       ls[i].loss = Layer.Loss.CrossEntropy;
+      ls[i].momentum_start = 0.5f;
+      ls[i].momentum_ramp = 1800000;
+      ls[i].momentum_stable = 0.99f;
       ls[i].init(ls, i);
     }
     return ls;
@@ -87,10 +95,10 @@ public class NeuralNetMnist extends Job {
 
   protected void startTraining(Layer[] ls) {
     // Single-thread SGD
-//    _trainer = new Trainer.Direct(ls, 0, self());
+    _trainer = new Trainer.Direct(ls, 1, self());
 
     // Single-node parallel
-    _trainer = new Trainer.Threaded(ls, 0, self());
+//    _trainer = new Trainer.Threaded(ls, 0, self());
 
     // Distributed parallel
 //    _trainer = new Trainer.MapReduce(ls, 0, self());
@@ -126,11 +134,11 @@ public class NeuralNetMnist extends Job {
           String text = (int) time + "s, " + processed + " samples (" + (ps) + "/s) ";
 
           // Build separate nets for scoring purposes, use same normalization stats as for training
-          Layer[] temp = build(train, trainLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
-          Layer.shareWeights(ls, temp);
+//          Layer[] temp = build(train, trainLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
+//          Layer.shareWeights(ls, temp);
           // Estimate training error on subset of dataset for speed
-          Errors e = NeuralNet.eval(temp, 1000, null);
-          text += "train: " + e;
+//          Errors e = NeuralNet.eval(temp, 1000, null);
+//          text += "train: " + e;
           text += ", rate: ";
           text += String.format("%.5g", ls[0].rate(processed));
           text += ", momentum: ";
@@ -138,14 +146,14 @@ public class NeuralNetMnist extends Job {
           System.out.println(text);
           if( (evals.incrementAndGet() % 5) == 0 ) {
             System.out.println("Computing test error");
-            temp = build(test, testLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
-            Layer.shareWeights(ls, temp);
-            e = NeuralNet.eval(temp, 0, null);
-            System.out.println("Test error: " + e);
+//            temp = build(test, testLabels, (VecsInput) ls[0], (VecSoftmax) ls[ls.length - 1]);
+//            Layer.shareWeights(ls, temp);
+//            e = NeuralNet.eval(temp, 0, null);
+//            System.out.println("Test error: " + e);
           }
         }
       }
-    }, 0, 10000);
+    }, 0, 10);
     startTraining(ls);
     return Status.Running;
   }

@@ -26,7 +26,7 @@ public class CloudLocal {
     public static void userMain(String[] args) throws Exception {
       int nodes = Integer.parseInt(args[0]);
       String ip = "127.0.0.1";
-      int port = 54321;
+      int port = 54323;
       // Flat file is not necessary, H2O can auto-discover nodes using multi-cast, added
       // here for increased determinism and as a way to get multiple clouds on same box
       String flat = "";

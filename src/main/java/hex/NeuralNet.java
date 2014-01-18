@@ -13,7 +13,6 @@ import water.fvec.*;
 import water.util.RString;
 import water.util.Utils;
 
-import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -82,7 +81,7 @@ public class NeuralNet extends ValidatedJob {
   public double epochs = 100;
 
   @API(help = "Seed for the random number generator", filter = Default.class)
-  public static long seed = new Random().nextLong();
+  public long seed = new Random().nextLong();
 
   @Override
   protected void registered(RequestServer.API_VERSION ver) {
@@ -245,103 +244,111 @@ public class NeuralNet extends ValidatedJob {
 
     System.out.println("Running for " + epochs + " epochs.");
 
-    // Use a separate thread for monitoring (blocked most of the time)
-    Thread monitor = new Thread() {
-      Errors[] trainErrors = trainErrors0, validErrors = validErrors0;
+//    // Use a separate thread for monitoring (blocked most of the time)
+//    Thread monitor = new Thread() {
+//      Errors[] trainErrors = trainErrors0, validErrors = validErrors0;
+//
+//      @Override public void run() {
+//        try {
+//          Vec[] valid = null;
+//          Vec validResp = null;
+//          if( validation != null ) {
+//            assert adapted != null;
+//            final Vec[] vs = adapted[0].vecs();
+//            valid = Arrays.copyOf(vs, vs.length - 1);
+//            System.arraycopy(adapted[0].vecs(), 0, valid, 0, valid.length);
+//            validResp = vs[vs.length - 1];
+//          }
+//
+//          //validate continuously
+//          final long total_samples = (long) (epochs * num_rows);
+//          long eval_samples = 0;
+//          while(!cancelled() && running) {
+//            eval_samples = eval(valid, validResp);
+//          }
+//          // make sure to do the final eval on a regular run
+//          if (mode != ExecutionMode.MapReduce_Hogwild && !cancelled() && eval_samples < total_samples) {
+//            eval_samples = eval(valid, validResp);
+//          }
+//          // hack for MapReduce, which calls cancel() from outside, but doesn't set running to false
+//          if (cancelled() && mode == ExecutionMode.MapReduce_Hogwild && running) {
+//            eval_samples = eval(valid, validResp);
+//            running = false;
+//          }
+//          // make sure we we finished properly
+//          assert(eval_samples == total_samples || (cancelled() && !running));
+//
+//          // remove validation data
+//          if( adapted != null && adapted[1] != null )
+//            adapted[1].remove();
+//        } catch( Exception ex ) {
+//          cancel(ex);
+//        }
+//      }
 
-      @Override public void run() {
-        try {
-          Vec[] valid = null;
-          Vec validResp = null;
-          if( validation != null ) {
-            assert adapted != null;
-            final Vec[] vs = adapted[0].vecs();
-            valid = Arrays.copyOf(vs, vs.length - 1);
-            System.arraycopy(adapted[0].vecs(), 0, valid, 0, valid.length);
-            validResp = vs[vs.length - 1];
-          }
-
-          //validate continuously
-          final long total_samples = (long) (epochs * num_rows);
-          long eval_samples = 0;
-          while(!cancelled() && running) {
-            eval_samples = eval(valid, validResp);
-          }
-          // make sure to do the final eval on a regular run
-          if (mode != ExecutionMode.MapReduce_Hogwild && !cancelled() && eval_samples < total_samples) {
-            eval_samples = eval(valid, validResp);
-          }
-          // hack for MapReduce, which calls cancel() from outside, but doesn't set running to false
-          if (cancelled() && mode == ExecutionMode.MapReduce_Hogwild && running) {
-            eval_samples = eval(valid, validResp);
-            running = false;
-          }
-          // make sure we we finished properly
-          assert(eval_samples == total_samples || (cancelled() && !running));
-
-          // remove validation data
-          if( adapted != null && adapted[1] != null )
-            adapted[1].remove();
-        } catch( Exception ex ) {
-          cancel(ex);
-        }
-      }
-
-      private long eval(Vec[] valid, Vec validResp) {
-        long[][] cm = null;
-        if( classification ) {
-          int classes = ls[ls.length - 1].units;
-          cm = new long[classes][classes];
-        }
-        Errors e = eval(train, trainResp, 10000, valid == null ? cm : null);
-        trainErrors = Utils.append(trainErrors, e);
-        if( valid != null ) {
-          e = eval(valid, validResp, 0, cm);
-          validErrors = Utils.append(validErrors, e);
-        }
-        NeuralNetModel model = new NeuralNetModel(destination_key, sourceKey, frame, ls);
-        model.training_errors = trainErrors;
-        model.validation_errors = validErrors;
-        model.confusion_matrix = cm;
-        // also copy model parameters
-        model.mode = mode;
-        model.activation = activation;
-        model.input_dropout_ratio = input_dropout_ratio;
-        model.initial_weight_distribution = initial_weight_distribution;
-        model.initial_weight_scale = initial_weight_scale;
-        model.rate = rate;
-        model.rate_annealing = rate_annealing;
-        model.max_w2 = max_w2;
-        model.momentum_start = momentum_start;
-        model.momentum_ramp = momentum_ramp;
-        model.momentum_stable = momentum_stable;
-        model.l1 = l1;
-        model.l2 = l2;
-        model.loss = loss;
-        model.seed = seed;
-        UKV.put(model._selfKey, model);
-        return e.training_samples;
-      }
-
-      private Errors eval(Vec[] vecs, Vec resp, long n, long[][] cm) {
-        Errors e = NeuralNet.eval(ls, vecs, resp, n, cm);
-        e.training_samples = trainer.processed();
-        e.training_time_ms = runTimeMs();
-        return e;
-      }
-    };
+//      private long eval(Vec[] valid, Vec validResp) {
+//        long[][] cm = null;
+//        if( classification ) {
+//          int classes = ls[ls.length - 1].units;
+//          cm = new long[classes][classes];
+//        }
+//        Errors e = eval(train, trainResp, 10000, valid == null ? cm : null);
+//        trainErrors = Utils.append(trainErrors, e);
+//        if( valid != null ) {
+//          e = eval(valid, validResp, 0, cm);
+//          validErrors = Utils.append(validErrors, e);
+//        }
+//        NeuralNetModel model = new NeuralNetModel(destination_key, sourceKey, frame, ls);
+//        model.training_errors = trainErrors;
+//        model.validation_errors = validErrors;
+//        model.confusion_matrix = cm;
+//        // also copy model parameters
+//        model.mode = mode;
+//        model.activation = activation;
+//        model.input_dropout_ratio = input_dropout_ratio;
+//        model.initial_weight_distribution = initial_weight_distribution;
+//        model.initial_weight_scale = initial_weight_scale;
+//        model.rate = rate;
+//        model.rate_annealing = rate_annealing;
+//        model.max_w2 = max_w2;
+//        model.momentum_start = momentum_start;
+//        model.momentum_ramp = momentum_ramp;
+//        model.momentum_stable = momentum_stable;
+//        model.l1 = l1;
+//        model.l2 = l2;
+//        model.loss = loss;
+//        model.seed = seed;
+//        UKV.put(model._selfKey, model);
+//        return e.training_samples;
+//      }
+//
+//      private Errors eval(Vec[] vecs, Vec resp, long n, long[][] cm) {
+//        Errors e = NeuralNet.eval(ls, vecs, resp, n, cm);
+//        e.training_samples = trainer.processed();
+//        e.training_time_ms = runTimeMs();
+//        return e;
+//      }
+//    };
     trainer.start();
-    monitor.start();
+//    monitor.start();
     trainer.join();
+
+//    for (int l=1; l<ls.length; l++) {
+    int l = 1;
+      for (int w=0; w<ls[l]._w.length; ++w) {
+        if (w % 100 == 0)
+        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
+      }
+//    }
 
     // hack to gracefully terminate the job submitted via H2O web API
     if (mode != ExecutionMode.MapReduce_Hogwild) {
       running = false; //tell the monitor thread to finish too
-      try {
-        monitor.join();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+//      try {
+//        monitor.join();
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
 
       // remove this job
       H2OCountedCompleter task = _fjtask;
@@ -732,7 +739,7 @@ public class NeuralNet extends ValidatedJob {
         l2 = job.l2;
         loss = job.loss;
         epochs = job.epochs;
-        seed = NeuralNet.seed;
+//        seed = NeuralNet.seed;
       }
       NeuralNetModel model = UKV.get(destination_key);
       if( model != null ) {
@@ -986,7 +993,8 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed; //= new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
-      return water.util.Utils.getDeterRNG(seed.getAndIncrement());
+      //return water.util.Utils.getDeterRNG(seed.getAndIncrement());
+      return water.util.Utils.getDeterRNG(seed.get());
     }
   }
 }

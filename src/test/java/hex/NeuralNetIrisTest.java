@@ -66,7 +66,7 @@ public class NeuralNetIrisTest extends TestUtil {
         UKV.remove(pars);
 
         float rate = 0.01f;
-        int epochs = 1000;
+        int epochs = 10000;
         Vec[] data = Utils.remove(_train.vecs(), _train.vecs().length - 1);
         Vec labels = _train.vecs()[_train.vecs().length - 1];
 
