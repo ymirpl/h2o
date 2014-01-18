@@ -343,13 +343,15 @@ public class NeuralNet extends ValidatedJob {
     monitor.start();
     trainer.join();
 
-//    for (int l=1; l<ls.length; l++) {
-//    int l = 1;
-//      for (int w=0; w<ls[l]._w.length; ++w) {
-//        if (w % 100 == 0)
-//        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
-//      }
-//    }
+    for (int l=1; l<ls.length; l++) {
+      for (int w=0; w<ls[l]._w.length; ++w) {
+        if (w % 100 == 0)
+        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
+      }
+      for (int a=0; a<ls[l]._a.length; ++a) {
+        System.out.println("Activation " + l + " [" + a + "] = " + ls[l]._a[a]);
+      }
+    }
 
     // hack to gracefully terminate the job submitted via H2O web API
     if (mode != ExecutionMode.MapReduce_Hogwild) {

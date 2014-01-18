@@ -12,10 +12,9 @@ public class NeuralNetMnistDrednet extends NeuralNetMnist {
   public static void main(String[] args) throws Exception {
     Class job = Class.forName(Thread.currentThread().getStackTrace()[1].getClassName());
     samples.launchers.CloudLocal.launch(job, 1);
-//    samples.launchers.CloudProcess.launch(job, 3);
     //samples.launchers.CloudRemote.launchIPs(job, "192.168.1.161", "192.168.1.162", "192.168.1.163", "192.168.1.164");
     //samples.launchers.CloudRemote.launchIPs(job, "192.168.1.163");
-//  samples.launchers.CloudRemote.launchIPs(job, "192.168.1.161", "192.168.1.163", "192.168.1.164");
+    //samples.launchers.CloudRemote.launchIPs(job, "192.168.1.162", "192.168.1.163", "192.168.1.164");
     //samples.launchers.CloudRemote.launchEC2(job, 8);
   }
 
@@ -25,29 +24,29 @@ public class NeuralNetMnistDrednet extends NeuralNetMnist {
     ls[1] = new Layer.RectifierDropout(1024);
     ls[2] = new Layer.RectifierDropout(1024);
     ls[3] = new Layer.RectifierDropout(2048);
-    ls[4] = new VecSoftmax(labels, outputStats, NeuralNet.Loss.CrossEntropy);
-
-    NeuralNet p = new NeuralNet();
-    p.rate = 0.01f;
-    p.rate_annealing = 1e-6f;
-    p.epochs = 1000;
-    p.activation = NeuralNet.Activation.RectifierWithDropout;
-    p.max_w2 = 15;
-    p.momentum_start = 0.5f;
-    p.momentum_ramp = 1800000;
-    p.momentum_stable = 0.99f;
-    p.l1 = .00001f;
-    p.l2 = .00f;
-    p.initial_weight_distribution = NeuralNet.InitialWeightDistribution.UniformAdaptive;
-    // Hinton
-//  p.initial_weight_distribution = Layer.InitialWeightDistribution.Normal;
-//  p.initial_weight_scale = 0.01;
-
+    ls[4] = new VecSoftmax(labels, outputStats);
     for( int i = 0; i < ls.length; i++ ) {
-      ls[i].init(ls, i, p);
+
+      // Default
+      ls[i].initial_weight_distribution = Layer.InitialWeightDistribution.UniformAdaptive;
+
+      // Hinton
+//      ls[i].initial_weight_distribution = Layer.InitialWeightDistribution.Normal;
+//      ls[i].initial_weight_scale = 0.01;
+
+      ls[i].rate = .01f;
+      ls[i].rate_annealing = 1e-6f;
+      ls[i].momentum_start = .5f;
+      ls[i].momentum_ramp = 60000 * 30; //TODO: try 300 epochs
+      ls[i].momentum_stable = .99f;
+      ls[i].l1 = .00001f;
+//      ls[i].l2 = .00001f;
+      ls[i].max_w2 = 15; //cf. hinton for Mnist
+      ls[i].loss = Layer.Loss.CrossEntropy;
+      //optional: use MSE on output layer
+//      ls[i].loss = (i == ls.length-1) ? Layer.Loss.MeanSquare : Layer.Loss.CrossEntropy;
+      ls[i].init(ls, i);
     }
-
-
     return ls;
   }
 
@@ -61,12 +60,14 @@ public class NeuralNetMnistDrednet extends NeuralNetMnist {
 
     System.out.println("Main training");
 
-//    System.out.println("Multi-threaded");
-//    _trainer = new Trainer.Threaded(ls, 0, self());
-//    _trainer.start();
-
-    System.out.println("MapReduce");
-    _trainer = new Trainer.MapReduce(ls, 0, self());
+    // this works and is accurate
+    System.out.println("Multi-threaded");
+    _trainer = new Trainer.Threaded(ls, 0, self());
     _trainer.start();
+
+    // TODO: Fix
+//    System.out.println("MapReduce");
+//    _trainer = new Trainer.MapReduce(ls, 0, self());
+//    _trainer.start();
   }
 }

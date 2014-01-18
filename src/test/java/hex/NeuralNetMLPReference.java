@@ -1,5 +1,7 @@
 package hex;
 
+import hex.rng.MersenneTwisterRNG;
+
 import java.text.DecimalFormat;
 import java.util.Random;
 
@@ -17,7 +19,7 @@ public class NeuralNetMLPReference {
   float[][] _testData;
   NeuralNetwork _nn;
 
-  void init(NeuralNet.Activation activation, Random rand, double holdout_ratio) {
+  void init(Layer.Activation activation) {
     double[][] ds = new double[150][];
     int r = 0;
     ds[r++] = new double[] { 5.1, 3.5, 1.4, 0.2, 0, 0, 1 };
@@ -181,11 +183,11 @@ public class NeuralNetMLPReference {
       allData[j][6] = (float) ds[j][4];
     }
 
-    int trainRows = (int) (allData.length * holdout_ratio);
+    int trainRows = (int) (allData.length * 0.80);
     int testRows = allData.length - trainRows;
     _trainData = new float[trainRows][];
     _testData = new float[testRows][];
-    MakeTrainTest(allData, _trainData, _testData, rand);
+    MakeTrainTest(allData, _trainData, _testData);
 
     // Normalize all data using train stats
     for( int i = 0; i < 4; i++ ) {
@@ -217,18 +219,18 @@ public class NeuralNetMLPReference {
     _nn.InitializeWeights();
   }
 
-  void train(int maxEpochs, float learnRate, NeuralNet.Loss loss) {
+  void train(int maxEpochs, float learnRate, Layer.Loss loss) {
     _nn.Train(_trainData, maxEpochs, learnRate, 0, loss);
   }
 
-  void MakeTrainTest(float[][] allData, float[][] trainData, float[][] testData, Random rand) {
+  void MakeTrainTest(float[][] allData, float[][] trainData, float[][] testData) {
     // split allData into 80% trainData and 20% testData
     int numCols = allData[0].length;
 
     int[] shuffle = new int[allData.length]; // create a random sequence of indexes
     for( int i = 0; i < shuffle.length; ++i )
       shuffle[i] = i;
-    NeuralNetwork.shuffle(shuffle, rand);
+    NeuralNetwork.shuffle(shuffle);
 
     int si = 0; // index into sequence[]
     int j = 0; // index into trainData or testData
@@ -282,7 +284,7 @@ public class NeuralNetMLPReference {
   }
 
   public static class NeuralNetwork {
-    NeuralNet.Activation activation = NeuralNet.Activation.Tanh;
+    Layer.Activation activation = Layer.Activation.Tanh;
     int numInput;
     int numHidden;
     int numOutput;
@@ -308,7 +310,7 @@ public class NeuralNetMLPReference {
     float[][] hoPrevWeightsDelta;
     float[] oPrevBiasesDelta;
 
-    public NeuralNetwork(NeuralNet.Activation activationType, int numInput, int numHidden, int numOutput) {
+    public NeuralNetwork(Layer.Activation activationType, int numInput, int numHidden, int numOutput) {
       this.activation = activationType;
       this.numInput = numInput;
       this.numHidden = numHidden;
@@ -511,9 +513,9 @@ public class NeuralNetMLPReference {
 
       for( int i = 0; i < numHidden; ++i )
         // apply activation
-        if (activation == NeuralNet.Activation.Tanh) {
+        if (activation == Layer.Activation.Tanh) {
           hOutputs[i] = HyperTanFunction(hSums[i]);
-        } else if (activation == NeuralNet.Activation.Rectifier) {
+        } else if (activation == Layer.Activation.Rectifier) {
           hOutputs[i] = Rectifier(hSums[i]);
         } else throw new RuntimeException("invalid activation.");
 
@@ -565,7 +567,7 @@ public class NeuralNetMLPReference {
 
     // ----------------------------------------------------------------------------------------
 
-    private void UpdateWeights(float[] tValues, float learnRate, float momentum, NeuralNet.Loss loss) {
+    private void UpdateWeights(float[] tValues, float learnRate, float momentum, Layer.Loss loss) {
       // update the weights and biases using back-propagation, with target values, eta (learning
 // rate),
       // alpha (momentum)
@@ -579,9 +581,9 @@ public class NeuralNetMLPReference {
       for( int i = 0; i < oGrads.length; ++i ) {
         // derivative of softmax = (1 - y) * y (same as log-sigmoid)
         float derivative = (1 - outputs[i]) * outputs[i];
-        if (loss == NeuralNet.Loss.CrossEntropy) {
+        if (loss == Layer.Loss.CrossEntropy) {
           oGrads[i] = tValues[i] - outputs[i];
-        } else if (loss == NeuralNet.Loss.MeanSquare) {
+        } else if (loss == Layer.Loss.MeanSquare) {
           // 'mean squared error version'. research suggests cross-entropy is better here . . .
           oGrads[i] = derivative * (tValues[i] - outputs[i]);
         } else throw new RuntimeException("invalid loss function");
@@ -590,9 +592,9 @@ public class NeuralNetMLPReference {
       // 2. compute hidden gradients
       for( int i = 0; i < hGrads.length; ++i ) {
         float derivative = 1;
-        if (activation == NeuralNet.Activation.Tanh) {
+        if (activation == Layer.Activation.Tanh) {
           derivative = (1 - hOutputs[i]) * (1 + hOutputs[i]); // derivative of tanh (y) = (1 - y) * (1 + y)
-        } else if (activation == NeuralNet.Activation.Rectifier) {
+        } else if (activation == Layer.Activation.Rectifier) {
           derivative = hOutputs[i] <= 0 ? 0 : 1;
         } else throw new RuntimeException("invalid activation.");
 
@@ -655,7 +657,7 @@ public class NeuralNetMLPReference {
 
     // ----------------------------------------------------------------------------------------
 
-    public void Train(float[][] trainData, int maxEprochs, float learnRate, float momentum, NeuralNet.Loss loss) {
+    public void Train(float[][] trainData, int maxEprochs, float learnRate, float momentum, Layer.Loss loss) {
       // train a back-prop style NN classifier using learning rate and momentum
       // no weight decay
       int epoch = 0;
@@ -679,7 +681,8 @@ public class NeuralNetMLPReference {
       }
     } // Train
 
-    static void shuffle(int[] sequence, Random rand) {
+    static void shuffle(int[] sequence) {
+      MersenneTwisterRNG rand = new MersenneTwisterRNG(MersenneTwisterRNG.SEEDS);
       for( int i = sequence.length - 1; i >= 0; i-- ) {
         int r = rand.nextInt(i + 1);
         int tmp = sequence[r];
