@@ -390,6 +390,9 @@ public class NeuralNet extends ValidatedJob {
       for (int a=0; a<ls[l]._a.length; ++a) {
         System.out.println("Activation " + l + " [" + a + "] = " + ls[l]._a[a]);
       }
+      for (int b=0; b<ls[l]._b.length; ++b) {
+        System.out.println("Bias " + l + " [" + b + "] = " + ls[l]._b[b]);
+      }
     }
 
     // Gracefully terminate the job submitted via H2O web API
