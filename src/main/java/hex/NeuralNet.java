@@ -351,6 +351,9 @@ public class NeuralNet extends ValidatedJob {
       for (int a=0; a<ls[l]._a.length; ++a) {
         System.out.println("Activation " + l + " [" + a + "] = " + ls[l]._a[a]);
       }
+      for (int b=0; b<ls[l]._b.length; ++b) {
+        System.out.println("Bias " + l + " [" + b + "] = " + ls[l]._b[b]);
+      }
     }
 
     // hack to gracefully terminate the job submitted via H2O web API
@@ -1005,6 +1008,8 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed; //= new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
+      Thread.dumpStack();
+      System.out.println("seed: " + seed.get());
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());
     }
   }
