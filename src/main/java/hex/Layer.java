@@ -971,7 +971,7 @@ public abstract class Layer extends Iced {
 
   @Override public Layer clone() {
     Layer l = (Layer) super.clone();
-    if (dropout != null) l.dropout = new Dropout(units);
+    //if (dropout != null) l.dropout = new Dropout(units);
     return l;
   }
 
