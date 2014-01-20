@@ -340,7 +340,7 @@ public class NeuralNet extends ValidatedJob {
       }
     };
     trainer.start();
-    monitor.start();
+//    monitor.start();
     trainer.join();
 
     for (int l=1; l<ls.length; l++) {
