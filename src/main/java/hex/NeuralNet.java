@@ -383,17 +383,21 @@ public class NeuralNet extends ValidatedJob {
     trainer.join();
 
     for (int l=1; l<ls.length; l++) {
+      double sumw = 0;
       for (int w=0; w<ls[l]._w.length; ++w) {
-        if (w % 100 == 0)
-        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
+        sumw += ls[l]._w[w];
       }
-      for (int a=0; a<ls[l]._a.length; ++a) {
-        System.out.println("Activation " + l + " [" + a + "] = " + ls[l]._a[a]);
-      }
+      sumw /= ls[l]._w.length;
+      System.out.println("Layer " + l + " Mean Weight = " + sumw);
+
+      double sumb = 0;
       for (int b=0; b<ls[l]._b.length; ++b) {
-        System.out.println("Bias " + l + " [" + b + "] = " + ls[l]._b[b]);
+        sumb += ls[l]._b[b];
       }
+      sumb /= ls[l]._b.length;
+      System.out.println("Layer " + l + " Mean Bias = " + sumb);
     }
+    System.out.println("Done");
 
     // Gracefully terminate the job submitted via H2O web API
     if (mode != MapReduce) {
@@ -1129,7 +1133,7 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed; // = new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
-      Thread.dumpStack();
+//      Thread.dumpStack();
       System.out.println("seed: " + seed.get());
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());
       //return water.util.Utils.getDeterRNG(seed.get());
