@@ -154,6 +154,7 @@ public abstract class Layer extends Iced {
       _e = new float[units];
     }
     _previous = ls[index - 1];
+    if (dropout != null) dropout._previous = _previous;
     _input = (Input) ls[0];
 
     if( weights ) {
@@ -696,7 +697,6 @@ public abstract class Layer extends Iced {
 
     @Override public void init(Layer[] ls, int index, boolean weights) {
       super.init(ls, index, weights);
-      if (dropout != null) dropout._previous = _previous;
       if( weights ) {
         randomize(getRNG(), 1.0f);
       }
@@ -807,7 +807,6 @@ public abstract class Layer extends Iced {
 
     @Override public void init(Layer[] ls, int index, boolean weights) {
       super.init(ls, index, weights);
-      dropout._previous = _previous;
       if( weights ) {
         randomize(getRNG(), 1.0f);
         for( int i = 0; i < _b.length; i++ )
@@ -864,7 +863,6 @@ public abstract class Layer extends Iced {
 
     @Override public void init(Layer[] ls, int index, boolean weights) {
       super.init(ls, index, weights);
-      if (dropout != null) dropout._previous = _previous;
       if( weights ) {
         randomize(getRNG(), 1.0f);
         for( int i = 0; i < _b.length; i++ )

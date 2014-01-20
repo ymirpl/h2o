@@ -147,7 +147,8 @@ public abstract class Trainer {
     final AtomicLong _processed = new AtomicLong();
 
     public Threaded(Layer[] ls, double epochs, final Key job) {
-      _trainers = new Base[Runtime.getRuntime().availableProcessors()];
+      //_trainers = new Base[Runtime.getRuntime().availableProcessors()];
+      _trainers = new Base[1];
       _threads = new Thread[_trainers.length];
       _stepsPerThread = (long) (epochs * ((Input) ls[0])._len / _threads.length);
       _resume = new CyclicBarrier(_threads.length + 1);
