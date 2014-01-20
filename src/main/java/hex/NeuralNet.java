@@ -41,7 +41,7 @@ public class NeuralNet extends ValidatedJob {
   public Activation activation = Activation.Tanh;
 
   @API(help = "Input layer dropout ratio", filter = Default.class, dmin = 0, dmax = 1)
-  public float input_dropout_ratio = 0;
+  public double input_dropout_ratio = 0;
 
   @API(help = "Hidden layer sizes, e.g. 1000, 1000. Grid search: (100, 100), (200, 200)", filter = Default.class)
   public int[] hidden = new int[] { 500 };
@@ -344,17 +344,21 @@ public class NeuralNet extends ValidatedJob {
     trainer.join();
 
     for (int l=1; l<ls.length; l++) {
+      double sumw = 0;
       for (int w=0; w<ls[l]._w.length; ++w) {
-        if (w % 100 == 0)
-        System.out.println("Layer " + l + " Weight[" + w + "] = " + ls[l]._w[w]);
+        sumw += ls[l]._w[w];
       }
-      for (int a=0; a<ls[l]._a.length; ++a) {
-        System.out.println("Activation " + l + " [" + a + "] = " + ls[l]._a[a]);
-      }
+      sumw /= ls[l]._w.length;
+      System.out.println("Layer " + l + " Mean Weight = " + sumw);
+
+      double sumb = 0;
       for (int b=0; b<ls[l]._b.length; ++b) {
-        System.out.println("Bias " + l + " [" + b + "] = " + ls[l]._b[b]);
+        sumb += ls[l]._b[b];
       }
+      sumb /= ls[l]._b.length;
+      System.out.println("Layer " + l + " Mean Bias = " + sumb);
     }
+    System.out.println("Done");
 
     // hack to gracefully terminate the job submitted via H2O web API
     if (mode != ExecutionMode.MapReduce_Hogwild) {
@@ -1008,7 +1012,7 @@ public class NeuralNet extends ValidatedJob {
     public static AtomicLong seed; //= new AtomicLong(new Random().nextLong());
 
     public static Random getRNG() {
-      Thread.dumpStack();
+//      Thread.dumpStack();
       System.out.println("seed: " + seed.get());
       return water.util.Utils.getDeterRNG(seed.getAndIncrement());
     }
