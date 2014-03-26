@@ -73,7 +73,6 @@ public class Constants extends Iced {
   public static final String FAMILY                = "family";
   public static final String FEATURES              = "features";
   public static final String FILE                  = "file";
-  public static final String FILENAME              = "filename";
   public static final String FILES                 = "files";
   public static final String FILTER                = "filter";
   public static final String FIRST_CHUNK           = "first_chunk";
