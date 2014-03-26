@@ -570,7 +570,15 @@ public class NanoHTTPD
           if (contentDisposition == null) {
             sendError( HTTP_BADREQUEST, "BAD REQUEST: Content type is multipart/form-data but no content-disposition info found. Usage: GET /example/file.html" );
           }
-          String key = parms.getProperty("key");
+          String key = null;
+
+          if (parms.getProperty("filename")!=null)
+            key = parms.getProperty("filename");
+          else
+            key = parms.getProperty("key");
+
+          System.out.println("key="+key);
+
           if (useValueArray) {
             ValueArray.readPut(key, new InputStreamWrapper(in, boundary.getBytes()));
           }

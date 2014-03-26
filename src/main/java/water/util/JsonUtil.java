@@ -17,6 +17,7 @@ public class JsonUtil {
 
   public static JsonObject escape(JsonObject json) {
     JsonObject res = new JsonObject();
+    System.out.println("json"+json);
     for( Entry<String, JsonElement> e : json.entrySet() )
       res.add(e.getKey(), escape(e.getValue()));
     return res;

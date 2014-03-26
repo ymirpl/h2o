@@ -270,7 +270,8 @@ public class RequestBuilders extends RequestQueries {
       done, ///< Indicates that the request has completed and no further action from the user is required
       poll, ///< Indicates that the same request should be repeated to see some progress
       redirect, ///< Indicates that the request was successful, but new request must be filled to obtain results
-      error ///< The request was an error.
+      error, ///< The request was an error.
+      custom
     }
 
     /** Time it took the request to finish. In ms.
@@ -323,6 +324,18 @@ public class RequestBuilders extends RequestQueries {
      */
     private Response(Status status, JsonObject response) {
       _status = status;
+      _response = response;
+      _redirectName = null;
+      _redirectArgs = null;
+      _redirArgs = null;
+      _pollProgress = -1;
+      _pollProgressElements = -1;
+      _req = null;
+    }
+
+
+    private Response(JsonObject response) {
+      _status = Status.custom;
       _response = response;
       _redirectName = null;
       _redirectArgs = null;
@@ -404,6 +417,13 @@ public class RequestBuilders extends RequestQueries {
     public static Response done(JsonObject response) {
       assert response != null : "Called Response.done with null JSON response - perhaps you should call Response.doneEmpty";
       return new Response(Status.done, response);
+    }
+
+    /** Returns new done response with given JSON response object.
+     */
+    public static Response custom(JsonObject response) {
+      assert response != null : "Called Response.custom with null JSON response";
+      return new Response(response);
     }
 
     /** Response done v2. */
@@ -507,22 +527,37 @@ public class RequestBuilders extends RequestQueries {
      */
     protected JsonObject responseToJson() {
       JsonObject resp = new JsonObject();
-      resp.addProperty(STATUS,_status.toString());
-      resp.addProperty(JSON_H2O, H2O.NAME);
-      resp.addProperty(NODE, H2O.SELF.toString());
-      resp.addProperty(REQUEST_TIME, _time);
       switch (_status) {
         case done:
+          resp.addProperty(STATUS,_status.toString());
+          resp.addProperty(JSON_H2O, H2O.NAME);
+          resp.addProperty(NODE, H2O.SELF.toString());
+          resp.addProperty(REQUEST_TIME, _time);
+          break;
         case error:
+          resp.addProperty(STATUS,_status.toString());
+          resp.addProperty(JSON_H2O, H2O.NAME);
+          resp.addProperty(NODE, H2O.SELF.toString());
+          resp.addProperty(REQUEST_TIME, _time);
           break;
         case redirect:
+          resp.addProperty(STATUS,_status.toString());
+          resp.addProperty(JSON_H2O, H2O.NAME);
+          resp.addProperty(NODE, H2O.SELF.toString());
+          resp.addProperty(REQUEST_TIME, _time);
           resp.addProperty(REDIRECT,_redirectName);
           if (_redirectArgs != null)
             resp.add(REDIRECT_ARGS,_redirectArgs);
           break;
         case poll:
+          resp.addProperty(STATUS,_status.toString());
+          resp.addProperty(JSON_H2O, H2O.NAME);
+          resp.addProperty(NODE, H2O.SELF.toString());
+          resp.addProperty(REQUEST_TIME, _time);
           resp.addProperty(PROGRESS, _pollProgress);
           resp.addProperty(PROGRESS_TOTAL, _pollProgressElements);
+          break;
+        case custom:
           break;
         default:
           assert(false): "Unknown response type "+_status.toString();
@@ -548,7 +583,7 @@ public class RequestBuilders extends RequestQueries {
       return res;
     }
 
-    public void toJava(StringBuilder sb) { 
+    public void toJava(StringBuilder sb) {
       if( _req != null ) _req.toJava(sb);
     }
 

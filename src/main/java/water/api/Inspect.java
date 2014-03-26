@@ -28,6 +28,7 @@ import water.fvec.Frame;
 import water.fvec.Vec;
 import water.parser.CustomParser.PSetupGuess;
 import water.parser.ParseDataset;
+import water.util.RString;
 import water.util.Utils;
 
 import java.util.HashMap;
@@ -42,6 +43,8 @@ public class Inspect extends Request {
   private final Int                            _max_column   = new Int(COLUMNS_DISPLAY, MAX_COLUMNS_TO_DISPLAY);
 
   static final int MAX_COLUMNS_TO_DISPLAY = 1000;
+
+  static private String _inspectTemplate;
   static final String NA = ""; // not available information
 
   static {
@@ -49,6 +52,7 @@ public class Inspect extends Request {
     _displayNames.put(MEAN, "avg");
     _displayNames.put(NUM_MISSING_VALUES, "Missing");
     _displayNames.put(VARIANCE, "sd");
+    _inspectTemplate = loadTemplate("/Inspect.html");
   }
 
   // Constructor called from 'Exec' query instead of the direct view links
@@ -83,8 +87,16 @@ public class Inspect extends Request {
   }
 
   public static String link(String txt, Key key) {
-    return "<a href='Inspect.html?key=" + key + "'>" + txt + "</a>";
+    RString rs = new RString("<a href='/Inspect.html?%key_param=%$key'>%content</a>");
+    rs.replace("key_param", KEY);
+    rs.replace("key", key.toString());
+    rs.replace("content", txt);
+    return rs.toString();
   }
+
+   @Override protected String htmlTemplate() {
+     return _inspectTemplate;
+   }
 
   @Override protected boolean log() {
     return false;
@@ -334,7 +346,6 @@ public class Inspect extends Request {
         sb.append("<div class='alert alert-success'>"
         		+ "<b>Produced in ").append(PrettyPrint.msecs(job.runTimeMs(),true)).append(".</b></div>");
     }
-    sb.append("<div class='alert alert-info'>").append(Inspect4UX.link(key, "NEW Inspect!")).append("</div>");
     sb.append("<div class='alert'>Set " + SetColumnNames.link(key,"Column Names") +"<br/>View " + SummaryPage.link(key, "Summary") +  "<br/>Build models using "
           + PCA.link(key, "PCA") + ", "
           + RF.link(key, "Single Node Random Forest") + ", "
