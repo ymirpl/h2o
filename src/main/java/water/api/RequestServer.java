@@ -2,6 +2,7 @@ package water.api;
 
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
+
 import hex.GridSearch.GridSearchProgress;
 import hex.KMeans2;
 import hex.KMeans2.KMeans2ModelView;
@@ -24,6 +25,7 @@ import water.H2O;
 import water.NanoHTTPD;
 import water.api.Script.RunScript;
 import water.api.Upload.PostFile;
+import water.api.v2.*;
 import water.deploy.LaunchJar;
 import water.util.Log;
 import water.util.Log.Tag.Sys;
@@ -43,7 +45,8 @@ import java.util.regex.Pattern;
 public class RequestServer extends NanoHTTPD {
   public enum API_VERSION {
     V_1(1, "/"),
-    V_2(2, "/2/"); // FIXME: better should be /v2/
+    V_2(2, "/2/"), // FIXME: better should be /v2/
+    V_v2(3, "/v2/");
     final private int _version;
     final private String _prefix;
     public final String prefix() { return _prefix; }
@@ -205,6 +208,11 @@ public class RequestServer extends NanoHTTPD {
 //    registerRequest(new GLMValidationView());
     registerRequest(new LaunchJar());
     Request.initializeNavBar();
+
+    //Blade Polska API
+    registerRequest(new v2Parse());
+    registerRequest(new v2PostFile());
+    registerRequest(new v2RespPrev());
   }
 
   /**

@@ -125,6 +125,7 @@ public class RequestStatics extends Constants {
   }
 
   protected static String encodeRedirectArgs(JsonObject args, Object[] args2) {
+    System.out.println("args: "+args.entrySet().toString()+" args2 "+args2.toString());
     if( args == null && args2 == null ) return "";
     if( args2 != null ) {
       StringBuilder sb = new StringBuilder();

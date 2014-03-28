@@ -122,6 +122,7 @@ public abstract class Request extends RequestBuilders {
   }
 
   protected NanoHTTPD.Response serveGrid(NanoHTTPD server, Properties parms, RequestType type) {
+    System.out.println("request: params: "+parms.entrySet().toString());
     String query = checkArguments(parms, type);
     if( query != null )
       return wrap(server, query, type);
@@ -346,5 +347,6 @@ public abstract class Request extends RequestBuilders {
   protected static final API_VERSION[] SUPPORTS_ONLY_V1 = new API_VERSION[] { API_VERSION.V_1 };
   protected static final API_VERSION[] SUPPORTS_ONLY_V2 = new API_VERSION[] { API_VERSION.V_2 };
   protected static final API_VERSION[] SUPPORTS_V1_V2   = new API_VERSION[] { API_VERSION.V_1, API_VERSION.V_2 };
-  public API_VERSION[] supportedVersions() { return SUPPORTS_ONLY_V1; }
+  protected static final API_VERSION[] SUPPORTS_ALL   = new API_VERSION[] { API_VERSION.V_1, API_VERSION.V_2, API_VERSION.V_v2 };
+  public API_VERSION[] supportedVersions() { return SUPPORTS_ALL; }
 }
