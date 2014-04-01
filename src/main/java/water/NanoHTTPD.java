@@ -486,7 +486,7 @@ public class NanoHTTPD
         }
 
         pre.put("uri", uri);
-        System.out.println("in: "+in.toString()+" "+pre.entrySet().toString()+" parms "+parms.entrySet().toString()+" header: "+header.entrySet().toString());
+        //System.out.println("in: "+in.toString()+" "+pre.entrySet().toString()+" parms "+parms.entrySet().toString()+" header: "+header.entrySet().toString());
       } catch ( IOException ioe ) {
         sendError( HTTP_INTERNALERROR, "SERVER INTERNAL ERROR: IOException: " + ioe.getMessage());
       }
