@@ -157,6 +157,7 @@ public class Constants extends Iced {
   public static final String SENT_ROWS             = "sent_rows";
   public static final String SIZE                  = "size";
   public static final String SOURCE_KEY            = "source_key";
+  public static final String URIS                  = "uris";
   public static final String STACK_TRACES          = "stack_traces";
   public static final String START_TIME            = "start_time";
   public static final String STATUS                = "status";

@@ -57,7 +57,7 @@ public class RequestQueries extends RequestArguments {
           }
         }
         if (!found) {
-          return jsonError("Request specifies the argument '"+key+"' but it is not a valid parameter for this query " + this.getClass().getName()).toString();
+          //return jsonError("Request specifies the argument '"+key+"' but it is not a valid parameter for this query " + this.getClass().getName()).toString();//LS do testow
         }
       }
     }

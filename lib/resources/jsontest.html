@@ -14,12 +14,12 @@ and open the template in the editor.
     <body>
         <script>
             $(document).ready(function() {
-                var data = {"uris" : [ "iris.csv" ]}
+                var data = {"uris" : [ "countrylist.csv" ]}
                 $.ajax({
                     type: 'POST',
-                    dataType: 'jsonp',
-                    //data: {parser_config:data},
-                    data: {source_key:"countrylist.csv"},
+                    dataType: 'json',
+                    data: {parser_config:data},
+                    //data: {uris:"countrylist.csv"},
                     url: 'http://localhost:54321/v2/parse_preview.json',
                     success: function(json) {
                         var output;

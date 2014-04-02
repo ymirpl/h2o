@@ -24,8 +24,8 @@ public class v2RespPrev extends JSONOnlyRequest {
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
   protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
   protected final Str            _excludeExpression    = new Str("exclude","");
-  protected final ExistingCSVKey _source    = new ExistingCSVKey(SOURCE_KEY);
-  protected final H2OKey         _key       = new H2OKey(SOURCE_KEY,true);
+  protected final ExistingCSVKey _source    = new ExistingCSVKey(URIS);//SOURCE_KEY
+  protected final H2OKey         _key       = new H2OKey(URIS,true);//SOURCE_KEY
   protected final NewH2OHexKey   _dest      = new NewH2OHexKey(DEST_KEY);
   protected final Bool           _blocking  = new Bool("blocking",false,"Synchronously wait until parse completes");
   @SuppressWarnings("unused")
