@@ -78,7 +78,6 @@ public class v2RespPrev extends JSONOnlyRequest {
     }else{
       response.add("header_file", uris);
     }
-    response.add("preview_len", previewLen);
 
 
 
@@ -109,11 +108,12 @@ public class v2RespPrev extends JSONOnlyRequest {
     }
 
 
-    response.add("preview", jRowArray);
 
 
     ///
     parserConfig.add("parser_config", response);
+    parserConfig.add("preview_len", previewLen);
+    parserConfig.add("preview", jRowArray);
 
     //Response r = Progress.redirect(response, job.self(), dest);
     //r.setBuilder(RequestStatics.DEST_KEY, new KeyElementBuilder());

@@ -14,7 +14,9 @@ and open the template in the editor.
     <body>
         <script>
             $(document).ready(function() {
-                var data = {"uris" : [ "countrylist.csv" ]}
+                //var data = {"uris" : [ "countrylist.csv" ]}
+                var data = new Object();
+               	data.uris = 'countrylist.csv'; 
                 $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -22,11 +24,8 @@ and open the template in the editor.
                     //data: {uris:"countrylist.csv"},
                     url: 'http://localhost:54321/v2/parse_preview.json',
                     success: function(json) {
-                        var output;
-                        for (json in obj) {
-                            output += property + ': ' + obj[property] + '; ';
-                        }
-//                        console.log(output);
+                        var output = "";
+                        output = JSON.stringify(json);
                         $('#content').html('<p>LS: '+output+'</p>');
                     }
                 })
