@@ -313,6 +313,7 @@ public class NanoHTTPD
 
         long size = 0x7FFFFFFFFFFFFFFFl;
         String contentLength = header.getProperty("content-length");
+        //System.out.println("contentLength: "+contentLength);
         if (contentLength != null) {
           try { size = Integer.parseInt(contentLength); }
           catch (NumberFormatException ex) {}
@@ -372,6 +373,7 @@ public class NanoHTTPD
             boolean useValueArray = !Pattern.matches("/[0-9]+/.*", uri);  // For /2 and beyond, use fluid vector.
             fileUpload(boundary,is,parms, useValueArray);
           } else {
+            System.out.println("Handle application/x-www-form-urlencoded size: "+size);
             // Handle application/x-www-form-urlencoded
 
             String postLine = "";
@@ -398,6 +400,7 @@ public class NanoHTTPD
                 sb.append(pbuf, 0, n);
               }
               postLine = sb.toString();
+              System.out.println("postLine: "+postLine);
             }
             else {
               //
@@ -639,6 +642,9 @@ public class NanoHTTPD
         {
       if ( parms == null )
         return;
+      System.out.println("NanoHttpd linia 645: LS: usunac to potem!");
+      //parms = parms.replaceAll("{", "").replaceAll("}", "");
+      parms = parms.replace("{", "").replace("}", "").replace("\"", "");
 
       StringTokenizer st = new StringTokenizer( parms, "&" );
       while ( st.hasMoreTokens())
@@ -651,6 +657,16 @@ public class NanoHTTPD
           String old = p.getProperty(key, null);
           p.put(key, old == null ? value : (old+","+value));
         }
+        //to tez do usuniecia
+        sep = e.indexOf( ':' );
+        if ( sep >= 0 ) {
+          String key = decodePercent( e.substring( 0, sep ) ).trim();
+          String value = decodePercent( e.substring( sep+1 ) );
+          String old = p.getProperty(key, null);
+          p.put(key, old == null ? value : (old+","+value));
+        }
+        //do usuniecia
+
       }
     }
 
