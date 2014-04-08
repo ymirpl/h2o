@@ -4,6 +4,8 @@ import java.net.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+import com.google.gson.*;
+
 import water.fvec.UploadFileVec;
 import water.util.*;
 import water.util.Log.Tag.Sys;
@@ -642,9 +644,9 @@ public class NanoHTTPD
         {
       if ( parms == null )
         return;
-      System.out.println("NanoHttpd linia 645: LS: usunac to potem!");
+      System.out.println("NanoHttpd linia 645: LS: jak wszystko bedzie dzialalo poprawnie usunac komentarze");
       //parms = parms.replaceAll("{", "").replaceAll("}", "");
-      parms = parms.replace("{", "").replace("}", "").replace("\"", "");
+      //parms = parms.replace("{", "").replace("}", "").replace("\"", "");
 
       StringTokenizer st = new StringTokenizer( parms, "&" );
       while ( st.hasMoreTokens())
@@ -657,14 +659,49 @@ public class NanoHTTPD
           String old = p.getProperty(key, null);
           p.put(key, old == null ? value : (old+","+value));
         }
-        //to tez do usuniecia
-        sep = e.indexOf( ':' );
-        if ( sep >= 0 ) {
-          String key = decodePercent( e.substring( 0, sep ) ).trim();
+        try {
+          new JsonParser().parse(parms); //check json
+
+        //sep = e.indexOf( ':' );
+        //if ( sep >= 0 ) {
+          /*System.out.println("Deb 1");
+          JsonParser jsonParser = new JsonParser();
+          System.out.println("Deb 2");
+          JsonObject jo = (JsonObject)jsonParser.parse(parms);
+          System.out.println("Deb 3");
+          System.out.println("jo.get(\"uris\"): "+decodePercent(jo.get("uris").toString()));
+          System.out.println("Deb 4");*/
+
+          Gson gson=new Gson();
+          Map<String,String> map=new HashMap<String,String>();
+          map=(Map<String,String>) gson.fromJson(parms, map.getClass());
+
+          Iterator iterator = map.keySet().iterator();
+
+          while (iterator.hasNext()) {
+             String key = iterator.next().toString();
+             String value = map.get(key).toString();
+
+             System.out.println(key + " " + value);
+             String old = p.getProperty(key, null);
+             p.put(key, old == null ? value : (old+","+value));
+          }
+
+        } catch (JsonParseException jpe) {
+
+        }
+          /*JsonArray ja = jo.getAsJsonArray();
+
+          for (int i=0; i<ja.size();i++){
+            System.out.println("Array: "+ja.get(i).toString());
+          }*/
+
+
+          /*String key = decodePercent( e.substring( 0, sep ) ).trim();
           String value = decodePercent( e.substring( sep+1 ) );
           String old = p.getProperty(key, null);
-          p.put(key, old == null ? value : (old+","+value));
-        }
+          p.put(key, old == null ? value : (old+","+value));*/
+        //}
         //do usuniecia
 
       }
