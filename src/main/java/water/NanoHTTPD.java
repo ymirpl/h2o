@@ -5,6 +5,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 import com.google.gson.*;
+import com.google.gson.internal.StringMap;
 
 import water.fvec.UploadFileVec;
 import water.util.*;
@@ -673,18 +674,37 @@ public class NanoHTTPD
           System.out.println("Deb 4");*/
 
           Gson gson=new Gson();
-          Map<String,String> map=new HashMap<String,String>();
-          map=(Map<String,String>) gson.fromJson(parms, map.getClass());
+          Map<String,Object> map=new HashMap<String,Object>();
+          map=(Map<String,Object>) gson.fromJson(parms, map.getClass());
 
           Iterator iterator = map.keySet().iterator();
 
           while (iterator.hasNext()) {
              String key = iterator.next().toString();
-             String value = map.get(key).toString();
+             //System.out.println("key: "+key);
+             String value = "";
+             if (map.get(key) instanceof StringMap ){
+               Iterator iter = ((StringMap)map.get(key)).keySet().iterator();
+               while (iter.hasNext()) {
+                 String key1 = iter.next().toString();
+                 String value1 = ((StringMap)map.get(key)).get(key1).toString();
+                 //System.out.println("key1: "+key1+" value1: "+value1);
+                 if (value1 != null && value1.startsWith("[") && value1.endsWith("]"))
+                   value1 = value1.substring(1, value1.length()-1);
+                 //System.out.println("value1: "+value1);
+                 String old = p.getProperty(key1, null);
+                 p.put(key1, old == null ? value1 : (old+","+value1));
+                 value = null;
+               }
+             }else{
+               value = map.get(key).toString();
+             }
+             //System.out.println("value: "+value);
 
-             System.out.println(key + " " + value);
+             //System.out.println(key + " " + value);
              String old = p.getProperty(key, null);
-             p.put(key, old == null ? value : (old+","+value));
+             if (value != null)
+               p.put(key, old == null ? value : (old+","+value));
           }
 
         } catch (JsonParseException jpe) {
