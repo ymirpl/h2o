@@ -122,8 +122,7 @@ public abstract class Request extends RequestBuilders {
   }
 
   protected NanoHTTPD.Response serveGrid(NanoHTTPD server, Properties parms, RequestType type) {
-    System.out.println("request: params: "+parms.entrySet().toString()+" type: "+type);
-    parms.remove("callback");
+    //System.out.println("request: params: "+parms.entrySet().toString()+" type: "+type);
     String query = checkArguments(parms, type);
     System.out.println("query: "+query);
     if( query != null )

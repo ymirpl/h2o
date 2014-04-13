@@ -33,6 +33,7 @@ public class RequestQueries extends RequestArguments {
    * @return
    */
   protected final String checkArguments(Properties args, RequestType type) {
+    System.out.println("args: "+args.entrySet().toString());
     // Why the following lines duplicate lines from Request#92 - handling query?
     // reset all arguments
     for (Argument arg: _arguments)
@@ -57,7 +58,7 @@ public class RequestQueries extends RequestArguments {
           }
         }
         if (!found) {
-          //return jsonError("Request specifies the argument '"+key+"' but it is not a valid parameter for this query " + this.getClass().getName()).toString();//LS do testow
+          return jsonError("Request specifies the argument '"+key+"' but it is not a valid parameter for this query " + this.getClass().getName()).toString();
         }
       }
     }
@@ -67,6 +68,7 @@ public class RequestQueries extends RequestArguments {
       if (!arg.disabled()) {
         try {
           arg.check(RequestQueries.this, args.getProperty(arg._name,""));
+          System.out.println("queryArgumentValueSet("+arg._name+","+args);
           queryArgumentValueSet(arg, args);
         } catch( IllegalArgumentException e ) {
           if (type == RequestType.json)
