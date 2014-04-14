@@ -11,7 +11,7 @@ public class v2ListUri extends Request {
 
   @Override protected Response serve() {
     JsonObject json = new JsonObject();
-    json.add("uris", new JsonPrimitive(_uri._displayName));
+    json.add("uris", new JsonPrimitive(_uri.value()));
     Response r = Response.done(json);
 
     return r;
