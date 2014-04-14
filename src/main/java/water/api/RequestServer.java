@@ -209,9 +209,10 @@ public class RequestServer extends NanoHTTPD {
     registerRequest(new LaunchJar());
     Request.initializeNavBar();
 
-    //Blade Polska API
+    //v2 API
     registerRequest(new v2Parse());
     registerRequest(new v2PostFile());
+    registerRequest(new v2ListUri());
     registerRequest(new v2RespPrev());
   }
 

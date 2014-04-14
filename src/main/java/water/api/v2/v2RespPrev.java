@@ -47,13 +47,14 @@ public class v2RespPrev extends JSONOnlyRequest {
     //response.addProperty(RequestStatics.JOB, job.self().toString());
     //response.addProperty(RequestStatics.DEST_KEY,dest.toString());
 
+    System.out.println("_header: "+_header.value());
+
     PSetup psetup = _source.value();
-    String [] header = psetup._setup._setup._columnNames;
     JsonArray uris = new JsonArray();
     uris.add(new JsonPrimitive(_key.value().toString()));
     JsonElement parserType  = new JsonPrimitive(_parserType.value().toString());
-    JsonElement headerSeparator  = new JsonPrimitive(DEFAULT_DELIMS[new Integer(_separator.value().toString())].substring(0, 1));
-    JsonElement dataSeparator  = new JsonPrimitive(DEFAULT_DELIMS[new Integer(_separator.value().toString())].substring(0, 1));
+    JsonElement headerSeparator  = new JsonPrimitive(_separator.getStringValue());
+    JsonElement dataSeparator  = new JsonPrimitive(_separator.getStringValue());
     JsonElement skipHeader  = new JsonPrimitive(new Boolean(_header.value().toString()));
     JsonElement previewLen = new JsonPrimitive(psetup._setup._data.length);
 
@@ -61,14 +62,23 @@ public class v2RespPrev extends JSONOnlyRequest {
     JsonArray jHRowArray = new JsonArray();
     JsonObject jHObject = new JsonObject();
 
-    String [] colnames = _source.value()._setup._setup._columnNames;
-    for (int i=0;i<colnames.length;i++){
-      jHObject = new JsonObject();
-      jHObject.add("header", new JsonPrimitive(colnames[i]));
-      jHObject.add("type", new JsonPrimitive("ENUM"));
-      jHRowArray.add(jHObject);
-    }
 
+    String [] colnames = psetup._setup._setup._columnNames;
+    if (colnames != null){
+      for (int i=0;i<colnames.length;i++){
+        jHObject = new JsonObject();
+        jHObject.add("header", new JsonPrimitive(colnames[i]));
+        jHObject.add("type", new JsonPrimitive("ENUM"));
+        jHRowArray.add(jHObject);
+      }
+    }else{
+      for (int i=0;i<psetup._setup._setup._ncols;i++){
+        jHObject = new JsonObject();
+        jHObject.add("header", new JsonPrimitive("c"+i));
+        jHObject.add("type", new JsonPrimitive("ENUM"));
+        jHRowArray.add(jHObject);
+      }
+    }
 
     response.add("uris", uris);
     response.add("columns", jHRowArray);
@@ -96,8 +106,8 @@ public class v2RespPrev extends JSONOnlyRequest {
 
     if( data != null ) {
       int j = 0;
-      if( psetup._setup._setup._header && header != null) { // Obvious header display, if asked for
-        if(header == data[0]) ++j;
+      if( psetup._setup._setup._header && colnames != null) { // Obvious header display, if asked for
+        if(colnames == data[0]) ++j;
       }
       String s2 = "";
       for( int i=j; i<data.length; i++ ) {
@@ -164,6 +174,7 @@ public class v2RespPrev extends JSONOnlyRequest {
     @Override protected String[] selectNames()      { System.out.println("DEFAULT_DELIMS: "+DEFAULT_DELIMS.toString()); return DEFAULT_DELIMS; }
     @Override protected Byte     defaultValue()     {return CsvParser.AUTO_SEP;}
     public void setValue(Byte b){record()._value = b;}
+    public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ""; }
     @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
     @Override protected Byte parse(String input) throws IllegalArgumentException {
       System.out.println("parse: "+input);

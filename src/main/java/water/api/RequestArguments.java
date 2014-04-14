@@ -1566,6 +1566,12 @@ public class RequestArguments extends RequestStatics {
     @Override protected String queryDescription() {
       return _description;
     }
+
+    public Bool invertValue(){
+      if (record() != null && record()._value != null)
+        record()._value = !record()._value;
+      return this;
+    }
   }
 
   public class ClassifyBool extends Bool {

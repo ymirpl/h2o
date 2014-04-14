@@ -68,7 +68,6 @@ public class RequestQueries extends RequestArguments {
       if (!arg.disabled()) {
         try {
           arg.check(RequestQueries.this, args.getProperty(arg._name,""));
-          System.out.println("queryArgumentValueSet("+arg._name+","+args);
           queryArgumentValueSet(arg, args);
         } catch( IllegalArgumentException e ) {
           if (type == RequestType.json)
