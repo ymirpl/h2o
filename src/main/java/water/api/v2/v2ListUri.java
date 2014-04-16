@@ -30,9 +30,9 @@ public class v2ListUri extends Request {
 
   @Override protected Response serve() {
 //http://h2o-test.s3.amazonaws.com/
-    if (_uri.value().contains("s3://")){
+    if (_uri.value().contains("s3:")){
       return uploadS3();
-    }else if (_uri.value().startsWith("http:") || _uri.value().startsWith("file:")){
+    }else if (_uri.value().startsWith("http:") || _uri.value().startsWith("file:") || _uri.value().startsWith("https:")){
       return uriUpload();
     }else  if (_uri.value().startsWith("hdfs:")){
         return uploadHdfs();

@@ -1,26 +1,73 @@
 package water.api.v2;
 
+import java.io.File;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import com.google.gson.*;
 
 import water.*;
 import water.api.JSONOnlyRequest;
 import water.api.TypeaheadKeysRequest;
+import water.api.Constants.Extensions;
 import water.api.RequestArguments.*;
+import water.api.RequestServer.API_VERSION;
 import water.api.v2.v2Parse.PSetup;
 import water.api.v2.v2RespPrev.*;
 import water.parser.*;
 
 public class GetHeader extends JSONOnlyRequest {
+
   private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
-  protected final ExistingCSVKey _source    = new ExistingCSVKey(URIS);
-  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
-  private   final Bool           _header    = new Bool("skip_header",false,"Use first line as a header");
   private   final Separator      _separator = new Separator("data_separator");
+  private   final Separator      _headerSeparator = new Separator("header_separator");
+  private   final Bool           _header    = new Bool("skip_header",false,"Use first line as a header");
+  protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
+  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
   protected final Str            _excludeExpression    = new Str("exclude","");
+  protected final ExistingCSVKey _source    = new ExistingCSVKey("uri");//SOURCE_KEY
+  protected final H2OKey         _key       = new H2OKey("uri",true);//SOURCE_KEY
+  protected final H2OKey         _headerKey = new H2OKey("header_file",false);//SOURCE_KEY
+  protected final NewH2OHexKey   _dest      = new NewH2OHexKey("dst");
+  protected final Bool           _blocking  = new Bool("blocking",false,"Synchronously wait until parse completes");
+  protected final Columns        _columns   = new Columns("columns");
+  @SuppressWarnings("unused")
+  private   final Preview        _preview   = new Preview(PREVIEW);
+  private   final PreviewLen     _previewLen = new PreviewLen("preview_len");
+  protected final Str            _uri    = new Str("uri");
 
   @Override protected Response serve() {
-    throw new RuntimeException("TODO Auto-generated method stub");
+    PSetup psetup = _source.value();
+    JsonArray jHRowArray = new JsonArray();
+    JsonObject json = new JsonObject();
+
+    /*Example:
+     "uri"              : "iris.csv",
+     "header"           : [ "sepal_len","sepal_wid","petal_len","petal_wid","class" ],
+     "header_separator" : ","*/
+
+
+    String [] colnames = psetup._setup._setup._columnNames;
+    if (colnames != null){
+      for (int i=0;i<colnames.length;i++){
+        jHRowArray.add(new JsonPrimitive(colnames[i]));
+      }
+    }else{
+      for (int i=0;i<psetup._setup._setup._ncols;i++){
+        jHRowArray.add(new JsonPrimitive("c"+i));
+      }
+    }
+
+    json.add("uri", new JsonPrimitive(_uri.value()));
+    json.add("headers", jHRowArray);
+    json.add("header_separator", new JsonPrimitive(_separator.value()));
+
+    return Response.custom(json);
+
+  }
+
+  @Override protected String href(API_VERSION v) {
+    return v.prefix() + "get_header";
   }
 
   public class ExistingCSVKey extends TypeaheadInputText<PSetup> {
@@ -231,6 +278,113 @@ public class GetHeader extends JSONOnlyRequest {
       return  CustomParser.ParserType.valueOf(input);
     }
  }
+
+  protected class NewH2OHexKey extends Str {
+    NewH2OHexKey(String name) {
+      super(name,null/*not required flag*/);
+      addPrerequisite(_source);
+    }
+    @Override protected String defaultValue() {
+      PSetup setup = _source.value();
+      if( setup == null ) return null;
+      String n = setup._keys.get(0).toString();
+      // blahblahblah/myName.ext ==> myName
+      int sep = n.lastIndexOf(File.separatorChar);
+      if( sep > 0 ) n = n.substring(sep+1);
+      int dot = n.lastIndexOf('.');
+      if( dot > 0 ) n = n.substring(0, dot);
+      if( !Character.isJavaIdentifierStart(n.charAt(0)) ) n = "X"+n;
+      char[] cs = n.toCharArray();
+      for( int i=1; i<cs.length; i++ )
+        if( !Character.isJavaIdentifierPart(cs[i]) )
+          cs[i] = '_';
+      n = new String(cs);
+      int i = 0;
+      String res = n + Extensions.HEX;
+      Key k = Key.make(res);
+      while(DKV.get(k) != null)
+        k = Key.make(res = n + ++i + Extensions.HEX);
+      return res;
+    }
+    @Override protected String queryDescription() { return "Destination hex key"; }
+  }
+
+  public class Preview extends Argument {
+    Preview(String name) {
+    super(name,false);
+//    addPrerequisite(_source);
+//    addPrerequisite(_separator);
+//    addPrerequisite(_parserType);
+//    addPrerequisite(_header);
+    setRefreshOnChange();
+  }
+  @Override protected String queryElement() {
+    // first determine the value to put in the field
+    // if no original value was supplied, use the provided one
+    String[][] data = null;
+    PSetup psetup = _source.value();
+    if(psetup == null)
+      return _source.specified()?"<div class='alert alert-error'><b>Found no valid setup!</b></div>":"";
+    StringBuilder sb = new StringBuilder();
+    if(psetup._failedKeys != null){
+      sb.append("<div class='alert alert-error'>");
+      sb.append("<div>\n<b>Found " + psetup._failedKeys.length + " files which are not compatible with the given setup:</b></div>");
+      int n = psetup._failedKeys.length;
+      if(n > 5){
+        sb.append("<div>" + psetup._failedKeys[0] + "</div>\n");
+        sb.append("<div>" + psetup._failedKeys[1] + "</div>\n");
+        sb.append("<div>...</div>");
+        sb.append("<div>" + psetup._failedKeys[n-2] + "</div>\n");
+        sb.append("<div>" + psetup._failedKeys[n-1] + "</div>\n");
+      } else for(int i = 0; i < n;++i)
+        sb.append("<div>" + psetup._failedKeys[n-1] + "</div>\n");
+      sb.append("</div>\n");
+    }
+    String [] err = psetup._setup._errors;
+    boolean hasErrors = err != null && err.length > 0;
+    boolean parsedOk = psetup._setup._isValid;
+    String parseMsgType = hasErrors?parsedOk?"warning":"error":"success";
+    sb.append("<div class='alert alert-" + parseMsgType + "'><b>" + psetup._setup.toString() + "</b>");
+    if(hasErrors)
+      for(String s:err)sb.append("<div>" + s + "</div>");
+    sb.append("</div>");
+    if(psetup._setup != null)
+      data = psetup._setup._data;
+    //ls
+    String [] header = psetup._setup._setup._columnNames;
+
+    if( data != null ) {
+      sb.append("<table class='table table-striped table-bordered'>");
+      int j = 0;
+      if( psetup._setup._setup._header && header != null) { // Obvious header display, if asked for
+        sb.append("<tr><th>Row#</th>");
+        for( String s : header ) sb.append("<th>").append(s).append("</th>");
+        sb.append("</tr>");
+        if(header == data[0]) ++j;
+      }
+      for( int i=j; i<data.length; i++ ) { // The first few rows
+        sb.append("<tr><td>Row ").append(i-j).append("</td>");
+        for( String s : data[i] ) sb.append("<td>").append(s).append("</td>");
+        sb.append("</tr>");
+      }
+      sb.append("</table>");
+    }
+    return sb.toString();
+  }
+  @Override protected Object parse(String input) throws IllegalArgumentException {return null;}
+  @Override protected Object defaultValue() {return null;}
+
+  @Override protected String queryDescription() {
+    return "Preview of the parsed data";
+  }
+  @Override protected String jsRefresh(String callbackName) {
+    return "";
+  }
+  @Override protected String jsValue() {
+    return "";
+  }
+}
+
   /** List of white space delimiters */
   static final String[] WHITE_DELIMS = { "NULL", "SOH (start of heading)", "STX (start of text)", "ETX (end of text)", "EOT (end of transmission)",
     "ENQ (enquiry)", "ACK (acknowledge)", "BEL '\\a' (bell)", "BS '\b' (backspace)", "HT  '\\t' (horizontal tab)", "LF  '\\n' (new line)", " VT '\\v' (vertical tab)",

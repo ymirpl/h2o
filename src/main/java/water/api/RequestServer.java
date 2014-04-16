@@ -216,6 +216,7 @@ public class RequestServer extends NanoHTTPD {
     registerRequest(new v2RespPrev());
     registerRequest(new water.api.v2.Progress());
     registerRequest(new CancelJob());
+    registerRequest(new GetHeader());
   }
 
   /**
