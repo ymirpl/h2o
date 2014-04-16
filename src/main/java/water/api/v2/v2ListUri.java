@@ -29,13 +29,13 @@ public class v2ListUri extends Request {
   private final Str _uri = new Str("uri");
 
   @Override protected Response serve() {
-
-    if (_uri.value().startsWith("http:") || _uri.value().startsWith("file:")){
-        return uriUpload();
-    }else if (_uri.value().startsWith("hdfs:")){
+//http://h2o-test.s3.amazonaws.com/
+    if (_uri.value().contains("s3://")){
+      return uploadS3();
+    }else if (_uri.value().startsWith("http:") || _uri.value().startsWith("file:")){
+      return uriUpload();
+    }else  if (_uri.value().startsWith("hdfs:")){
         return uploadHdfs();
-    }else if (_uri.value().startsWith("s3:")){
-        return uploadS3();
     }else if (_uri.value().startsWith("/")){
         return uploadPath();
     }
@@ -151,6 +151,8 @@ public class v2ListUri extends Request {
 
   private Response uploadS3(){
     String bucket = _uri.value();
+    if (bucket.startsWith("s3://"))
+      bucket = bucket.substring(5);
     Log.info("ImportS3 processing (" + bucket + ")");
     JsonObject json = new JsonObject();
     JsonArray succ = new JsonArray();
@@ -162,13 +164,10 @@ public class v2ListUri extends Request {
       currentList = s3.listNextBatchOfObjects(currentList);
       processListing(currentList, succ, fail);
     }
-    json.add(NUM_SUCCEEDED, new JsonPrimitive(succ.size()));
-    json.add(SUCCEEDED, succ);
-    json.add(NUM_FAILED, new JsonPrimitive(fail.size()));
-    json.add(FAILED, fail);
+    json.add("uris", succ);
     DKV.write_barrier();
-    Response r = Response.done(json);
-    r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());
+    Response r = Response.custom(json);
+    //r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());
     return r;
 
   }
@@ -178,8 +177,8 @@ public class v2ListUri extends Request {
       try {
         Key k = PersistS3.loadKey(obj);
         JsonObject o = new JsonObject();
-        o.addProperty(KEY, k.toString());
-        o.addProperty(FILE, obj.getKey());
+        o.addProperty("uri", k.toString());
+        //o.addProperty("uri", obj.getKey());
         o.addProperty(VALUE_SIZE, obj.getSize());
         succ.add(o);
       } catch( IOException e ) {
