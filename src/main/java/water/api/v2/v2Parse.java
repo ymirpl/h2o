@@ -8,9 +8,10 @@ import java.io.File;
 
 import water.*;
 import water.api.*;
-import water.api.RequestArguments.H2OKey;
+import water.api.RequestArguments.*;
 import water.api.RequestBuilders.Response;
 import water.api.RequestServer.API_VERSION;
+import water.api.v2.v2RespPrev.*;
 import water.parser.*;
 import water.util.RString;
 
@@ -18,7 +19,7 @@ import com.google.gson.JsonObject;
 
 public class v2Parse extends Request {
 
-  private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
+  /*private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
   private   final Separator      _separator = new Separator(SEPARATOR);
   private   final Bool           _header    = new Bool(HEADER,false,"Use first line as a header");
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
@@ -28,17 +29,33 @@ public class v2Parse extends Request {
   protected final NewH2OHexKey   _dest      = new NewH2OHexKey(DEST_KEY);
   protected final Bool           _blocking  = new Bool("blocking",false,"Synchronously wait until parse completes");
   @SuppressWarnings("unused")
+  private   final Preview        _preview   = new Preview(PREVIEW);*/
+
+  private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
+  private   final Separator      _separator = new Separator("data_separator");
+  private   final Separator      _headerSeparator = new Separator("header_separator");
+  private   final Bool           _header    = new Bool("skip_header",false,"Use first line as a header");
+  protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
+  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
+  protected final Str            _excludeExpression    = new Str("exclude","");
+  protected final ExistingCSVKey _source    = new ExistingCSVKey(URIS);//SOURCE_KEY
+  protected final H2OKey         _key       = new H2OKey(URIS,true);//SOURCE_KEY
+  protected final H2OKey         _headerKey = new H2OKey("header_file",false);//SOURCE_KEY
+  protected final NewH2OHexKey   _dest      = new NewH2OHexKey("dst");
+  protected final Bool           _blocking  = new Bool("blocking",false,"Synchronously wait until parse completes");
+  protected final Columns        _columns   = new Columns("columns");
+  @SuppressWarnings("unused")
   private   final Preview        _preview   = new Preview(PREVIEW);
+  private   final PreviewLen     _previewLen = new PreviewLen("preview_len");
 
   public v2Parse() {
-    System.out.println("BladeParse");
     _excludeExpression.setRefreshOnChange();
     _header.setRefreshOnChange();
     _blocking._hideInQuery = true;
   }
 
   @Override protected String href(API_VERSION v) {
-    return v.prefix() + "blade_prev";
+    return v.prefix() + "parse";
   }
 
 //  private static String toHTML(ParseSetupGuessException e){
@@ -211,6 +228,41 @@ public class v2Parse extends Request {
     }
     @Override protected String queryDescription() { return "Destination hex key"; }
   }
+
+
+
+  private class Columns extends InputSelect<String> {
+    public Columns(String name) {
+      super(name,false);
+      setRefreshOnChange();
+    }
+    @Override protected String   queryDescription() { return "header column name"; }
+    @Override protected String[] selectValues()     { return null;  }
+    @Override protected String[] selectNames()      { return null; }
+    @Override protected String     defaultValue()     {return "";}
+    public void setValue(String s){record()._value = s;}
+    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
+    @Override protected String parse(String input) throws IllegalArgumentException {
+      return input;
+    }
+  }
+
+  private class PreviewLen extends InputSelect<String> {
+    public PreviewLen(String name) {
+      super(name,false);
+      setRefreshOnChange();
+    }
+    @Override protected String   queryDescription() { return "previre length"; }
+    @Override protected String[] selectValues()     { return null;  }
+    @Override protected String[] selectNames()      { return null; }
+    @Override protected String     defaultValue()     {return "";}
+    public void setValue(String s){record()._value = s;}
+    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
+    @Override protected String parse(String input) throws IllegalArgumentException {
+      return input;
+    }
+  }
+
   public class HeaderKey extends H2OExistingKey {
     public HeaderKey(String name, boolean required) {
       super(name, required);
@@ -354,13 +406,14 @@ public class v2Parse extends Request {
       setRefreshOnChange();
     }
     @Override protected String   queryDescription() { return "Utilized separator"; }
-    @Override protected String[] selectValues()     { return DEFAULT_IDX_DELIMS;   }
-    @Override protected String[] selectNames()      { return DEFAULT_DELIMS; }
+    @Override protected String[] selectValues()     { System.out.println("DEFAULT_IDX_DELIMS: "+DEFAULT_IDX_DELIMS.toString()); return DEFAULT_IDX_DELIMS;   }
+    @Override protected String[] selectNames()      { System.out.println("DEFAULT_DELIMS: "+DEFAULT_DELIMS.toString()); return DEFAULT_DELIMS; }
     @Override protected Byte     defaultValue()     {return CsvParser.AUTO_SEP;}
     public void setValue(Byte b){record()._value = b;}
+    public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ""; }
     @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
     @Override protected Byte parse(String input) throws IllegalArgumentException {
-      Byte result = Byte.valueOf(input);
+      Byte result = input.getBytes()[0];//Byte.valueOf(input);
       return result;
     }
   }

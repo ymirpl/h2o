@@ -177,9 +177,7 @@ public class v2RespPrev extends JSONOnlyRequest {
     public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ""; }
     @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
     @Override protected Byte parse(String input) throws IllegalArgumentException {
-      System.out.println("parse: "+input);
       Byte result = input.getBytes()[0];//Byte.valueOf(input);
-      System.out.println("parse: result: "+result);
       return result;
     }
   }
