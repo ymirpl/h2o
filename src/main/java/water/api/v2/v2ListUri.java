@@ -29,7 +29,7 @@ public class v2ListUri extends Request {
   private final Str _uri = new Str("uri");
 
   @Override protected Response serve() {
-//http://h2o-test.s3.amazonaws.com/
+
     if (_uri.value().contains("s3:")){
       return uploadS3();
     }else if (_uri.value().startsWith("http:") || _uri.value().startsWith("file:") || _uri.value().startsWith("https:")){

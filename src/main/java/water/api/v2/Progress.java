@@ -31,8 +31,8 @@ public class Progress extends Request {
     if( job != null && job.isCancelled() ) {
       jsonResponse.add("status", new JsonPrimitive("cancel"));
     }else if( job == null || job.isDone()){
-      jsonResponse.add("progress", new JsonPrimitive(1));
-      jsonResponse.add("status", new JsonPrimitive("inprogress"));
+      jsonResponse.add("progress", new JsonPrimitive(1.0));
+      jsonResponse.add("status", new JsonPrimitive("done"));
     }else if (job != null){
       jsonResponse.add("progress", new JsonPrimitive(job.progress()));
       jsonResponse.add("status", new JsonPrimitive("inprogress"));
