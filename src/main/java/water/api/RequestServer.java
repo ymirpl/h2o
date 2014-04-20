@@ -210,10 +210,10 @@ public class RequestServer extends NanoHTTPD {
     Request.initializeNavBar();
 
     //v2 API
-    registerRequest(new v2Parse());
-    registerRequest(new v2PostFile());
-    registerRequest(new v2ListUri());
-    registerRequest(new v2RespPrev());
+    registerRequest(new Parser());
+    registerRequest(new UploadFile());
+    registerRequest(new ListUri());
+    registerRequest(new PreviewData());
     registerRequest(new water.api.v2.Progress());
     registerRequest(new CancelJob());
     registerRequest(new GetHeader());

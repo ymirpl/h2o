@@ -12,8 +12,8 @@ import water.api.TypeaheadKeysRequest;
 import water.api.Constants.Extensions;
 import water.api.RequestArguments.*;
 import water.api.RequestServer.API_VERSION;
-import water.api.v2.v2Parse.PSetup;
-import water.api.v2.v2RespPrev.*;
+import water.api.v2.Parser.PSetup;
+import water.api.v2.PreviewData.*;
 import water.parser.*;
 
 public class GetHeader extends JSONOnlyRequest {

@@ -26,7 +26,7 @@ import water.persist.PersistS3;
 import water.util.FileIntegrityChecker;
 import water.util.Log;
 
-public class v2ListUri extends Request {
+public class ListUri extends Request {
   private final Str _uri = new Str("uri");
   private final Str _sourceType = new Str("source_type");
 
@@ -74,6 +74,7 @@ public class v2ListUri extends Request {
       JsonObject jObject = new JsonObject();
       jObject.add("uri", new JsonPrimitive(k.toString()));
       jObject.add("size", new JsonPrimitive(0));
+      jObject.add("dest", new JsonPrimitive(k.make().toString()));
       urisArray.add(jObject);
       json.add("uris", urisArray);
 
@@ -148,6 +149,7 @@ public class v2ListUri extends Request {
       urisArray.add(jObject);
     }
     json.add("uris", urisArray);
+    json.add("dest", new JsonPrimitive(Key.make().toString()));
     return Response.custom(json);
   }
 
@@ -167,6 +169,7 @@ public class v2ListUri extends Request {
       processListing(currentList, succ, fail);
     }
     json.add("uris", succ);
+    json.add("dest", new JsonPrimitive(Key.make().toString()));
     DKV.write_barrier();
     Response r = Response.custom(json);
     //r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());

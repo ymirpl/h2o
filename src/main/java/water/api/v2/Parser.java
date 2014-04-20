@@ -1,22 +1,23 @@
 package water.api.v2;
 
-import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.io.File;
 
 import water.*;
-import water.api.DocGen.FieldDoc;
 import water.api.*;
-import water.api.Constants.Extensions;
 import water.api.RequestArguments.*;
 import water.api.RequestBuilders.Response;
 import water.api.RequestServer.API_VERSION;
-import water.api.v2.v2Parse.*;
+import water.api.v2.PreviewData.*;
 import water.parser.*;
+import water.util.RString;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
 
-public class v2RespPrev extends JSONOnlyRequest {
+public class Parser extends Request {
 
   private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
   private   final Separator      _separator = new Separator("data_separator");
@@ -35,206 +36,46 @@ public class v2RespPrev extends JSONOnlyRequest {
   private   final Preview        _preview   = new Preview(PREVIEW);
   private   final PreviewLen     _previewLen = new PreviewLen("preview_len");
 
-
+  public Parser() {
+    _excludeExpression.setRefreshOnChange();
+    _header.setRefreshOnChange();
+    _blocking._hideInQuery = true;
+  }
 
   @Override protected String href(API_VERSION v) {
-    return v.prefix() + "parse_preview";
+    return v.prefix() + "parse";
   }
 
-  @Override protected Response serve() {
-    JsonObject response = new JsonObject();
-    JsonObject parserConfig = new JsonObject();
-    //response.addProperty(RequestStatics.JOB, job.self().toString());
-    //response.addProperty(RequestStatics.DEST_KEY,dest.toString());
+//  private static String toHTML(ParseSetupGuessException e){
+//    StringBuilder sb = new StringBuilder("<h3>Unable to Parse</h3>");
+//    if(!e.getMessage().isEmpty())sb.append("<div>" + e.getMessage() + "</div>");
+//    if(e._failed != null && e._failed.length > 0){
+//      sb.append("<div>\n<b>Found " + e._failed.length + " files which are not compatible with the given setup:</b></div>");
+//      int n = e._failed.length;
+//      if(n > 5){
+//        sb.append("<div>" + e._failed[0] + "</div>");
+//        sb.append("<div>" + e._failed[1] + "</div>");
+//        sb.append("<div>...</div>");
+//        sb.append("<div>" + e._failed[n-2] + "</div>");
+//        sb.append("<div>" + e._failed[n-1] + "</div>");
+//      } else for(int i = 0; i < n;++i)
+//        sb.append("<div>" + e._failed[n-1] + "</div>");
+//    } else if(e._gSetup == null || !e._gSetup.valid()) {
+//      sb.append("Failed to find consistent parser setup for the given files!");
+//    }
+//    return sb.toString();
+//  }
 
-    System.out.println("_header: "+_header.value());
-
-    PSetup psetup = _source.value();
-    JsonArray uris = new JsonArray();
-    uris.add(new JsonPrimitive(_key.value().toString()));
-    JsonElement parserType  = new JsonPrimitive(_parserType.value().toString());
-    JsonElement headerSeparator  = new JsonPrimitive(_separator.getStringValue());
-    JsonElement dataSeparator  = new JsonPrimitive(_separator.getStringValue());
-    JsonElement skipHeader  = new JsonPrimitive(new Boolean(_header.value().toString()));
-    JsonElement previewLen = new JsonPrimitive(psetup._setup._data.length);
-
-
-    JsonArray jHRowArray = new JsonArray();
-    JsonObject jHObject = new JsonObject();
-
-
-    String [] colnames = psetup._setup._setup._columnNames;
-    if (colnames != null){
-      for (int i=0;i<colnames.length;i++){
-        jHObject = new JsonObject();
-        jHObject.add("header", new JsonPrimitive(colnames[i]));
-        jHObject.add("type", new JsonPrimitive("ENUM"));
-        jHRowArray.add(jHObject);
-      }
-    }else{
-      for (int i=0;i<psetup._setup._setup._ncols;i++){
-        jHObject = new JsonObject();
-        jHObject.add("header", new JsonPrimitive("c"+i));
-        jHObject.add("type", new JsonPrimitive("ENUM"));
-        jHRowArray.add(jHObject);
-      }
-    }
-
-    response.add("uris", uris);
-    response.add("columns", jHRowArray);
-    response.add("parser_type", parserType);
-    response.add("header_separator", headerSeparator);
-    response.add("data_separator", dataSeparator);
-    response.add("skip_header", skipHeader);
-    if(_hdrFrom != null && _hdrFrom.value() != null){
-      JsonElement headerFile  = new JsonPrimitive(_hdrFrom.value().toString());
-      response.add("header_file", headerFile);
-    }else{
-      response.add("header_file", uris);
-    }
-
-
-
-    ///
-
-    String[][] data = null;
-    data = psetup._setup._data;
-
-    StringBuilder sb = new StringBuilder();
-    JsonArray jRowArray = new JsonArray();
-    JsonArray jArray = new JsonArray();
-
-    if( data != null ) {
-      int j = 0;
-      if( psetup._setup._setup._header && colnames != null) { // Obvious header display, if asked for
-        if(colnames == data[0]) ++j;
-      }
-      String s2 = "";
-      for( int i=j; i<data.length; i++ ) {
-        jArray = new JsonArray();
-        s2 = "";
-        for( String s : data[i] ){
-          jArray.add(new JsonPrimitive(s));
-          s2+=s;
-        }
-        jRowArray.add(jArray);
-      }
-    }
-
-
-
-
-    ///
-    parserConfig.add("parser_config", response);
-    parserConfig.add("preview_len", previewLen);
-    parserConfig.add("preview", jRowArray);
-
-    //Response r = Progress.redirect(response, job.self(), dest);
-    //r.setBuilder(RequestStatics.DEST_KEY, new KeyElementBuilder());
-    return Response.custom(parserConfig);
-    //return Response.done(new JsonObject());
-  }
-
-  private class ParserType extends InputSelect<CustomParser.ParserType> {
-    public ParserType(String name) {
-      super(name,false);
-      setRefreshOnChange();
-      _values = new String [CustomParser.ParserType.values().length-1];
-      int i = 0;
-      for(CustomParser.ParserType t:CustomParser.ParserType.values())
-        if(t != CustomParser.ParserType.XLSX)
-          _values[i++] = t.name();
-    }
-    private final String [] _values;
-    @Override protected String   queryDescription() { return "File type"; }
-    @Override protected String[] selectValues()     {
-      return _values;
-    }
-    @Override protected String[] selectNames()      {
-      return _values;
-    }
-    @Override protected CustomParser.ParserType defaultValue() {
-      return CustomParser.ParserType.AUTO;
-    }
-    public void setValue(CustomParser.ParserType pt){record()._value = pt;}
-    @Override protected String   selectedItemValue(){
-      return value() != null ? value().toString() : defaultValue().toString(); }
-    @Override protected CustomParser.ParserType parse(String input) throws IllegalArgumentException {
-      return  CustomParser.ParserType.valueOf(input);
-    }
-  }
-
-  private class Separator extends InputSelect<Byte> {
-    public Separator(String name) {
-      super(name,false);
-      setRefreshOnChange();
-    }
-    @Override protected String   queryDescription() { return "Utilized separator"; }
-    @Override protected String[] selectValues()     { System.out.println("DEFAULT_IDX_DELIMS: "+DEFAULT_IDX_DELIMS.toString()); return DEFAULT_IDX_DELIMS;   }
-    @Override protected String[] selectNames()      { System.out.println("DEFAULT_DELIMS: "+DEFAULT_DELIMS.toString()); return DEFAULT_DELIMS; }
-    @Override protected Byte     defaultValue()     {return CsvParser.AUTO_SEP;}
-    public void setValue(Byte b){record()._value = b;}
-    public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ""; }
-    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
-    @Override protected Byte parse(String input) throws IllegalArgumentException {
-      Byte result = input.getBytes()[0];//Byte.valueOf(input);
-      return result;
-    }
-  }
-
-  private class Columns extends InputSelect<String> {
-    public Columns(String name) {
-      super(name,false);
-      setRefreshOnChange();
-    }
-    @Override protected String   queryDescription() { return "header column name"; }
-    @Override protected String[] selectValues()     { return null;  }
-    @Override protected String[] selectNames()      { return null; }
-    @Override protected String     defaultValue()     {return "";}
-    public void setValue(String s){record()._value = s;}
-    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
-    @Override protected String parse(String input) throws IllegalArgumentException {
-      return input;
-    }
-  }
-
-  private class PreviewLen extends InputSelect<String> {
-    public PreviewLen(String name) {
-      super(name,false);
-      setRefreshOnChange();
-    }
-    @Override protected String   queryDescription() { return "previre length"; }
-    @Override protected String[] selectValues()     { return null;  }
-    @Override protected String[] selectNames()      { return null; }
-    @Override protected String     defaultValue()     {return "";}
-    public void setValue(String s){record()._value = s;}
-    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
-    @Override protected String parse(String input) throws IllegalArgumentException {
-      return input;
-    }
-  }
-
-
-
-  public class HeaderKey extends H2OExistingKey {
-    public HeaderKey(String name, boolean required) {
-      super(name, required);
-    }
-    @Override protected String queryElement() {
-      StringBuilder sb = new StringBuilder(super.queryElement() + "\n");
-      try{
-        String [] colnames = _source.value()._setup._setup._columnNames;
-        if(colnames != null){
-          sb.append("<table class='table table-striped table-bordered'>").append("<tr><th>Header:</th>");
-          for( String s : colnames ) sb.append("<th>").append(s).append("</th>");
-          sb.append("</tr></table>");
-        }
-      } catch( Exception e ) { }
-      return sb.toString();
-    }
-
-  }
-
+  protected static class PSetup {
+    final transient ArrayList<Key> _keys;
+    final transient Key [] _failedKeys;
+    final CustomParser.PSetupGuess _setup;
+    PSetup( ArrayList<Key> keys, Key [] fkeys, CustomParser.PSetupGuess pguess) { _keys=keys; _failedKeys = fkeys; _setup = pguess; }
+  };
+  // An H2O Key Query, which runs the basic CSV parsing heuristics.  Accepts
+  // Key wildcards, and gathers all matching Keys for simultaneous parsing.
+  // Multi-key parses are only allowed on compatible CSV files, and only 1 is
+  // allowed to have headers.
   public class ExistingCSVKey extends TypeaheadInputText<PSetup> {
     public ExistingCSVKey(String name) {
       super(TypeaheadKeysRequest.class, name, true);
@@ -244,9 +85,7 @@ public class v2RespPrev extends JSONOnlyRequest {
 
 
     @Override protected PSetup parse(String input) throws IllegalArgumentException {
-      System.out.println("parse");
       Pattern p = makePattern(input);
-      System.out.println("p: "+p);
       Pattern exclude = null;
       if(_hdrFrom.specified())
         _header.setValue(true);
@@ -350,6 +189,7 @@ public class v2RespPrev extends JSONOnlyRequest {
     @Override protected String queryDescription() { return "An existing H2O key (or regex of keys) of CSV text"; }
   }
 
+
   // A Query String, which defaults to the source Key with a '.hex' suffix
   protected class NewH2OHexKey extends Str {
     NewH2OHexKey(String name) {
@@ -381,6 +221,58 @@ public class v2RespPrev extends JSONOnlyRequest {
     @Override protected String queryDescription() { return "Destination hex key"; }
   }
 
+
+
+  private class Columns extends InputSelect<String> {
+    public Columns(String name) {
+      super(name,false);
+      setRefreshOnChange();
+    }
+    @Override protected String   queryDescription() { return "header column name"; }
+    @Override protected String[] selectValues()     { return null;  }
+    @Override protected String[] selectNames()      { return null; }
+    @Override protected String     defaultValue()     {return "";}
+    public void setValue(String s){record()._value = s;}
+    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
+    @Override protected String parse(String input) throws IllegalArgumentException {
+      return input;
+    }
+  }
+
+  private class PreviewLen extends InputSelect<String> {
+    public PreviewLen(String name) {
+      super(name,false);
+      setRefreshOnChange();
+    }
+    @Override protected String   queryDescription() { return "previre length"; }
+    @Override protected String[] selectValues()     { return null;  }
+    @Override protected String[] selectNames()      { return null; }
+    @Override protected String     defaultValue()     {return "";}
+    public void setValue(String s){record()._value = s;}
+    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
+    @Override protected String parse(String input) throws IllegalArgumentException {
+      return input;
+    }
+  }
+
+  public class HeaderKey extends H2OExistingKey {
+    public HeaderKey(String name, boolean required) {
+      super(name, required);
+    }
+    @Override protected String queryElement() {
+      StringBuilder sb = new StringBuilder(super.queryElement() + "\n");
+      try{
+        String [] colnames = _source.value()._setup._setup._columnNames;
+        if(colnames != null){
+          sb.append("<table class='table table-striped table-bordered'>").append("<tr><th>Header:</th>");
+          for( String s : colnames ) sb.append("<th>").append(s).append("</th>");
+          sb.append("</tr></table>");
+        }
+      } catch( Exception e ) { }
+      return sb.toString();
+    }
+
+  }
   // A Query Bool, which includes a pretty HTML-ized version of the first few
   // parsed data rows.  If the value() is TRUE, we display as-if the first row
   // is a label/header column, and if FALSE not.
@@ -425,7 +317,6 @@ public class v2RespPrev extends JSONOnlyRequest {
       sb.append("</div>");
       if(psetup._setup != null)
         data = psetup._setup._data;
-      //ls
       String [] header = psetup._setup._setup._columnNames;
 
       if( data != null ) {
@@ -460,6 +351,94 @@ public class v2RespPrev extends JSONOnlyRequest {
     }
   }
 
+  public static String link(Key k, String content) {
+    return link(k.toString(),content);
+  }
+  public static String link(String k, String content) {
+    RString rs = new RString("<a href='Parse.query?%key_param=%$key'>%content</a>");
+    rs.replace("key_param", SOURCE_KEY);//
+    rs.replace("key", k.toString());
+    rs.replace("content", content);
+    return rs.toString();
+  }
+
+  @Override protected Response serve() {
+    System.out.println("Response!");
+    PSetup p = _source.value();
+    if(!p._setup._isValid)
+      return Response.error("Given parser setup is not valid, I can not parse this file.");
+    CustomParser.ParserSetup setup = p._setup._setup;
+    setup._singleQuotes = _sQuotes.value();
+    Key dest = Key.make(_dest.value());
+    try {
+      // Make a new Setup, with the 'header' flag set according to user wishes.
+      Key[] keys = p._keys.toArray(new Key[p._keys.size()]);
+      Job job = ParseDataset.forkParseDataset(dest, keys,setup);
+      if (_blocking.value()) {
+        Job.waitUntilJobEnded(job.self());
+      }
+      JsonObject response = new JsonObject();
+      response.addProperty(RequestStatics.JOB, job.self().toString());
+      response.addProperty(RequestStatics.DEST_KEY,dest.toString());
+      response.addProperty("LS", "LS");
+
+      PSetup psetup = _source.value();
+      String [] header = psetup._setup._setup._columnNames;
+      response.addProperty("header", header[0]);
+      Response r = Progress.redirect(response, job.self(), dest);
+      r.setBuilder(RequestStatics.DEST_KEY, new KeyElementBuilder());
+      return r;
+    } catch( Throwable e ) {
+      return Response.error(e);
+    }
+  }
+  private class Separator extends InputSelect<Byte> {
+    public Separator(String name) {
+      super(name,false);
+      setRefreshOnChange();
+    }
+    @Override protected String   queryDescription() { return "Utilized separator"; }
+    @Override protected String[] selectValues()     { System.out.println("DEFAULT_IDX_DELIMS: "+DEFAULT_IDX_DELIMS.toString()); return DEFAULT_IDX_DELIMS;   }
+    @Override protected String[] selectNames()      { System.out.println("DEFAULT_DELIMS: "+DEFAULT_DELIMS.toString()); return DEFAULT_DELIMS; }
+    @Override protected Byte     defaultValue()     {return CsvParser.AUTO_SEP;}
+    public void setValue(Byte b){record()._value = b;}
+    public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ""; }
+    @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
+    @Override protected Byte parse(String input) throws IllegalArgumentException {
+      Byte result = input.getBytes()[0];//Byte.valueOf(input);
+      return result;
+    }
+  }
+
+  private class ParserType extends InputSelect<CustomParser.ParserType> {
+    public ParserType(String name) {
+      super(name,false);
+      setRefreshOnChange();
+      _values = new String [CustomParser.ParserType.values().length-1];
+      int i = 0;
+      for(CustomParser.ParserType t:CustomParser.ParserType.values())
+        if(t != CustomParser.ParserType.XLSX)
+          _values[i++] = t.name();
+    }
+    private final String [] _values;
+    @Override protected String   queryDescription() { return "File type"; }
+    @Override protected String[] selectValues()     {
+      return _values;
+    }
+    @Override protected String[] selectNames()      {
+      return _values;
+    }
+    @Override protected CustomParser.ParserType defaultValue() {
+      return CustomParser.ParserType.AUTO;
+    }
+    public void setValue(CustomParser.ParserType pt){record()._value = pt;}
+    @Override protected String   selectedItemValue(){
+      return value() != null ? value().toString() : defaultValue().toString(); }
+    @Override protected CustomParser.ParserType parse(String input) throws IllegalArgumentException {
+      return  CustomParser.ParserType.valueOf(input);
+    }
+  }
+
   /** List of white space delimiters */
   static final String[] WHITE_DELIMS = { "NULL", "SOH (start of heading)", "STX (start of text)", "ETX (end of text)", "EOT (end of transmission)",
     "ENQ (enquiry)", "ACK (acknowledge)", "BEL '\\a' (bell)", "BS '\b' (backspace)", "HT  '\\t' (horizontal tab)", "LF  '\\n' (new line)", " VT '\\v' (vertical tab)",
@@ -486,59 +465,7 @@ public class v2RespPrev extends JSONOnlyRequest {
     for (i = 0; i < 126; i++) DEFAULT_IDX_DELIMS[i] = String.valueOf(i);
     DEFAULT_DELIMS[i]     = "AUTO";
     DEFAULT_IDX_DELIMS[i] = String.valueOf(CsvParser.AUTO_SEP);
-  }
-
-  public static String quote(String string) {
-    if (string == null || string.length() == 0) {
-        return "\"\"";
-    }
-
-    char         c = 0;
-    int          i;
-    int          len = string.length();
-    StringBuilder sb = new StringBuilder(len + 4);
-    String       t;
-
-    sb.append('"');
-    for (i = 0; i < len; i += 1) {
-        c = string.charAt(i);
-        switch (c) {
-        case '\\':
-        case '"':
-            sb.append('\\');
-            sb.append(c);
-            break;
-        case '/':
-//                if (b == '<') {
-                sb.append('\\');
-//                }
-            sb.append(c);
-            break;
-        case '\b':
-            sb.append("\\b");
-            break;
-        case '\t':
-            sb.append("\\t");
-            break;
-        case '\n':
-            sb.append("\\n");
-            break;
-        case '\f':
-            sb.append("\\f");
-            break;
-        case '\r':
-           sb.append("\\r");
-           break;
-        default:
-            if (c < ' ') {
-                t = "000" + Integer.toHexString(c);
-                sb.append("\\u" + t.substring(t.length() - 4));
-            } else {
-                sb.append(c);
-            }
-        }
-    }
-    sb.append('"');
-    return sb.toString();
+  };
 }
-}
+
+

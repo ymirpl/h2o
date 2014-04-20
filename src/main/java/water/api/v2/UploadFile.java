@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import water.api.*;
 import water.api.RequestServer.API_VERSION;
 
-  public class v2PostFile extends JSONOnlyRequest {
+  public class UploadFile extends JSONOnlyRequest {
     H2OKey key = new H2OKey(FILENAME,true);
 
     @Override public String href() { return href(API_VERSION.V_v2); }
