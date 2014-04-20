@@ -18,6 +18,7 @@ import water.*;
 import water.api.Parse;
 import water.api.Request;
 import water.api.RequestArguments.GeneralFile;
+import water.api.RequestArguments.Str;
 import water.api.RequestBuilders.*;
 import water.api.RequestServer.API_VERSION;
 import water.persist.PersistHdfs;
@@ -27,16 +28,17 @@ import water.util.Log;
 
 public class v2ListUri extends Request {
   private final Str _uri = new Str("uri");
+  private final Str _sourceType = new Str("source_type");
 
   @Override protected Response serve() {
 
-    if (_uri.value().contains("s3:")){
+    if (_sourceType.value().equals("s3")){
       return uploadS3();
-    }else if (_uri.value().startsWith("http:") || _uri.value().startsWith("file:") || _uri.value().startsWith("https:")){
+    }else if (_sourceType.value().equals("http")){
       return uriUpload();
-    }else  if (_uri.value().startsWith("hdfs:")){
+    }else  if (_sourceType.value().equals("hdfs")){
         return uploadHdfs();
-    }else if (_uri.value().startsWith("/")){
+    }else if (_sourceType.value().equals("cluster")){
         return uploadPath();
     }
 

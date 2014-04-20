@@ -246,6 +246,7 @@ public class v2RespPrev extends JSONOnlyRequest {
     @Override protected PSetup parse(String input) throws IllegalArgumentException {
       System.out.println("parse");
       Pattern p = makePattern(input);
+      System.out.println("p: "+p);
       Pattern exclude = null;
       if(_hdrFrom.specified())
         _header.setValue(true);
@@ -256,13 +257,17 @@ public class v2RespPrev extends JSONOnlyRequest {
       for( Key key : H2O.globalKeySet(null) ) { // For all keys
         if( !key.user_allowed() ) continue;
         String ks = key.toString();
-        if( !p.matcher(ks).matches() ) // Ignore non-matching keys
-          continue;
-        if(exclude != null && exclude.matcher(ks).matches())
-          continue;
-        Value v2 = DKV.get(key);  // Look at it
-        if( !v2.isRawData() ) // filter common mistake such as *filename* with filename.hex already present
-          continue;
+        if (p.toString().contains(", ") && p.toString().contains(ks)){
+          //System.out.println("ks "+ks+" contains in: "+p.toString());
+        }else{
+          if( !p.matcher(ks).matches() ) // Ignore non-matching keys
+            continue;
+          if(exclude != null && exclude.matcher(ks).matches())
+            continue;
+          Value v2 = DKV.get(key);  // Look at it
+          if( !v2.isRawData() ) // filter common mistake such as *filename* with filename.hex already present
+            continue;
+        }
         keys.add(key);        // Add to list
       }
       if(keys.size() == 0 )

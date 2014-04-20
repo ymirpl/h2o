@@ -19,18 +19,6 @@ import com.google.gson.JsonObject;
 
 public class v2Parse extends Request {
 
-  /*private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
-  private   final Separator      _separator = new Separator(SEPARATOR);
-  private   final Bool           _header    = new Bool(HEADER,false,"Use first line as a header");
-  protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
-  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
-  protected final Str            _excludeExpression    = new Str("exclude","");
-  protected final ExistingCSVKey _source    = new ExistingCSVKey(SOURCE_KEY);
-  protected final NewH2OHexKey   _dest      = new NewH2OHexKey(DEST_KEY);
-  protected final Bool           _blocking  = new Bool("blocking",false,"Synchronously wait until parse completes");
-  @SuppressWarnings("unused")
-  private   final Preview        _preview   = new Preview(PREVIEW);*/
-
   private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
   private   final Separator      _separator = new Separator("data_separator");
   private   final Separator      _headerSeparator = new Separator("header_separator");
@@ -108,13 +96,17 @@ public class v2Parse extends Request {
       for( Key key : H2O.globalKeySet(null) ) { // For all keys
         if( !key.user_allowed() ) continue;
         String ks = key.toString();
-        if( !p.matcher(ks).matches() ) // Ignore non-matching keys
-          continue;
-        if(exclude != null && exclude.matcher(ks).matches())
-          continue;
-        Value v2 = DKV.get(key);  // Look at it
-        if( !v2.isRawData() ) // filter common mistake such as *filename* with filename.hex already present
-          continue;
+        if (p.toString().contains(", ") && p.toString().contains(ks)){
+          //System.out.println("ks "+ks+" contains in: "+p.toString());
+        }else{
+          if( !p.matcher(ks).matches() ) // Ignore non-matching keys
+            continue;
+          if(exclude != null && exclude.matcher(ks).matches())
+            continue;
+          Value v2 = DKV.get(key);  // Look at it
+          if( !v2.isRawData() ) // filter common mistake such as *filename* with filename.hex already present
+            continue;
+        }
         keys.add(key);        // Add to list
       }
       if(keys.size() == 0 )
