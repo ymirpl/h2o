@@ -2,7 +2,9 @@
 package water.api.v2;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
+import water.Key;
 import water.api.*;
 import water.api.RequestServer.API_VERSION;
 
@@ -17,6 +19,9 @@ import water.api.RequestServer.API_VERSION;
     @Override protected Response serve() {
       JsonObject response = new JsonObject();
       response.addProperty("dst", key.value().toString());
+      //response.add("uri", new JsonPrimitive(key.toString()));
+      //response.add("size", new JsonPrimitive(0));
+      //response.add("dst", new JsonPrimitive(Key.make().toString()));
       return Response.custom(response);
     }
   }

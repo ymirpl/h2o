@@ -16,8 +16,10 @@ public class CancelJob extends Request {
   @Override protected Response serve() {
     Job job = findJob();
     job.cancel();
-
-    return Response.EMPTY_RESPONSE;
+    if (job.isCancelled())
+      return Response.EMPTY_RESPONSE;
+    else
+      return Response.error("Job is not cancelled!");
   }
 
   protected Job findJob() {

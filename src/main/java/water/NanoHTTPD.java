@@ -645,9 +645,6 @@ public class NanoHTTPD
         {
       if ( parms == null )
         return;
-      System.out.println("NanoHttpd linia 645: LS: jak wszystko bedzie dzialalo poprawnie usunac komentarze");
-      //parms = parms.replaceAll("{", "").replaceAll("}", "");
-      //parms = parms.replace("{", "").replace("}", "").replace("\"", "");
 
       StringTokenizer st = new StringTokenizer( parms, "&" );
       while ( st.hasMoreTokens())
@@ -663,16 +660,6 @@ public class NanoHTTPD
         try {
           new JsonParser().parse(parms); //check json
 
-        //sep = e.indexOf( ':' );
-        //if ( sep >= 0 ) {
-          /*System.out.println("Deb 1");
-          JsonParser jsonParser = new JsonParser();
-          System.out.println("Deb 2");
-          JsonObject jo = (JsonObject)jsonParser.parse(parms);
-          System.out.println("Deb 3");
-          System.out.println("jo.get(\"uris\"): "+decodePercent(jo.get("uris").toString()));
-          System.out.println("Deb 4");*/
-
           Gson gson=new Gson();
           Map<String,Object> map=new HashMap<String,Object>();
           map=(Map<String,Object>) gson.fromJson(parms, map.getClass());
@@ -681,17 +668,14 @@ public class NanoHTTPD
 
           while (iterator.hasNext()) {
              String key = iterator.next().toString();
-             //System.out.println("key: "+key);
              String value = "";
              if (map.get(key) instanceof StringMap ){
                Iterator iter = ((StringMap)map.get(key)).keySet().iterator();
                while (iter.hasNext()) {
                  String key1 = iter.next().toString();
                  String value1 = ((StringMap)map.get(key)).get(key1).toString();
-                 //System.out.println("key1: "+key1+" value1: "+value1);
                  if (value1 != null && value1.startsWith("[") && value1.endsWith("]"))
                    value1 = value1.substring(1, value1.length()-1);
-                 //System.out.println("value1: "+value1);
                  String old = p.getProperty(key1, null);
                  p.put(key1, old == null ? value1 : (old+","+value1));
                  value = null;
@@ -699,9 +683,6 @@ public class NanoHTTPD
              }else{
                value = map.get(key).toString();
              }
-             //System.out.println("value: "+value);
-
-             //System.out.println(key + " " + value);
              String old = p.getProperty(key, null);
              if (value != null)
                p.put(key, old == null ? value : (old+","+value));
@@ -710,20 +691,6 @@ public class NanoHTTPD
         } catch (JsonParseException jpe) {
 
         }
-          /*JsonArray ja = jo.getAsJsonArray();
-
-          for (int i=0; i<ja.size();i++){
-            System.out.println("Array: "+ja.get(i).toString());
-          }*/
-
-
-          /*String key = decodePercent( e.substring( 0, sep ) ).trim();
-          String value = decodePercent( e.substring( sep+1 ) );
-          String old = p.getProperty(key, null);
-          p.put(key, old == null ? value : (old+","+value));*/
-        //}
-        //do usuniecia
-
       }
     }
 

@@ -74,16 +74,9 @@ public class ListUri extends Request {
       JsonObject jObject = new JsonObject();
       jObject.add("uri", new JsonPrimitive(k.toString()));
       jObject.add("size", new JsonPrimitive(0));
-      jObject.add("dest", new JsonPrimitive(k.make().toString()));
+      jObject.add("dst", new JsonPrimitive(k.make().toString()));
       urisArray.add(jObject);
       json.add("uris", urisArray);
-
-      /*
-"uris" : [
-        { "uri": "hdfs://192.168.1.161/home-0xdiag-datasets/file_1.dat.gz", "size": 1024 },
-        { "uri": "hdfs://192.168.1.161/home-0xdiag-datasets/file_2.dat.gz", "size": 2048 }
-    ],
-       */
 
 
       Response r = Response.custom(json);
@@ -111,10 +104,12 @@ public class ListUri extends Request {
       }
       DKV.write_barrier();
       JsonObject json = new JsonObject();
-      json.add(NUM_SUCCEEDED, new JsonPrimitive(succ.size()));
+      /*json.add(NUM_SUCCEEDED, new JsonPrimitive(succ.size()));
       json.add(SUCCEEDED, succ);
       json.add(NUM_FAILED, new JsonPrimitive(fail.size()));
-      json.add(FAILED, fail);
+      json.add(FAILED, fail);*/
+      json.add("uris", succ);
+      json.add("dst", new JsonPrimitive(Key.make().toString()));
       Response r = Response.done(json);
       r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());
       // Add quick link
@@ -141,15 +136,13 @@ public class ListUri extends Request {
     JsonObject json = new JsonObject();
     JsonArray urisArray = new JsonArray();
     for (int i=0;i<afiles.size();i++){
-      System.out.println("#############File: "+afiles.get(i)+" key: "+akeys.get(i));
-
       JsonObject jObject = new JsonObject();
       jObject.add("uri", new JsonPrimitive(akeys.get(i)));
       jObject.add("size", new JsonPrimitive(0));
       urisArray.add(jObject);
     }
     json.add("uris", urisArray);
-    json.add("dest", new JsonPrimitive(Key.make().toString()));
+    json.add("dst", new JsonPrimitive(Key.make().toString()));
     return Response.custom(json);
   }
 
@@ -169,7 +162,7 @@ public class ListUri extends Request {
       processListing(currentList, succ, fail);
     }
     json.add("uris", succ);
-    json.add("dest", new JsonPrimitive(Key.make().toString()));
+    json.add("dst", new JsonPrimitive(Key.make().toString()));
     DKV.write_barrier();
     Response r = Response.custom(json);
     //r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());

@@ -44,12 +44,10 @@ public class PreviewData extends JSONOnlyRequest {
   @Override protected Response serve() {
     JsonObject response = new JsonObject();
     JsonObject parserConfig = new JsonObject();
-    //response.addProperty(RequestStatics.JOB, job.self().toString());
-    //response.addProperty(RequestStatics.DEST_KEY,dest.toString());
-
-    System.out.println("_header: "+_header.value());
-
     PSetup psetup = _source.value();
+
+    _columns.changeColumnNames(psetup);
+
     JsonArray uris = new JsonArray();
     uris.add(new JsonPrimitive(_key.value().toString()));
     JsonElement parserType  = new JsonPrimitive(_parserType.value().toString());
@@ -64,7 +62,7 @@ public class PreviewData extends JSONOnlyRequest {
 
 
     String [] colnames = psetup._setup._setup._columnNames;
-    if (colnames != null){
+    if (colnames != null && _header.value()){
       for (int i=0;i<colnames.length;i++){
         jHObject = new JsonObject();
         jHObject.add("header", new JsonPrimitive(colnames[i]));
@@ -93,10 +91,6 @@ public class PreviewData extends JSONOnlyRequest {
       response.add("header_file", uris);
     }
 
-
-
-    ///
-
     String[][] data = null;
     data = psetup._setup._data;
 
@@ -121,18 +115,11 @@ public class PreviewData extends JSONOnlyRequest {
       }
     }
 
-
-
-
-    ///
     parserConfig.add("parser_config", response);
     parserConfig.add("preview_len", previewLen);
     parserConfig.add("preview", jRowArray);
 
-    //Response r = Progress.redirect(response, job.self(), dest);
-    //r.setBuilder(RequestStatics.DEST_KEY, new KeyElementBuilder());
     return Response.custom(parserConfig);
-    //return Response.done(new JsonObject());
   }
 
   private class ParserType extends InputSelect<CustomParser.ParserType> {
@@ -196,6 +183,21 @@ public class PreviewData extends JSONOnlyRequest {
     @Override protected String parse(String input) throws IllegalArgumentException {
       return input;
     }
+    protected void changeColumnNames(PSetup psetup){
+    String [] colnames = psetup._setup._setup._columnNames;
+
+
+    if (colnames != null && this.value() != null && this.value() != ""){
+      for (int i=0;i<colnames.length;i++){
+        colnames[i]=getHeaderValue();
+      }
+    }
+    }
+
+    private String getHeaderValue(){
+      setValue(value().substring(value().indexOf("header=")+7));
+      return value().substring(0, value().indexOf(","));
+    }
   }
 
   private class PreviewLen extends InputSelect<String> {
@@ -221,16 +223,7 @@ public class PreviewData extends JSONOnlyRequest {
       super(name, required);
     }
     @Override protected String queryElement() {
-      StringBuilder sb = new StringBuilder(super.queryElement() + "\n");
-      try{
-        String [] colnames = _source.value()._setup._setup._columnNames;
-        if(colnames != null){
-          sb.append("<table class='table table-striped table-bordered'>").append("<tr><th>Header:</th>");
-          for( String s : colnames ) sb.append("<th>").append(s).append("</th>");
-          sb.append("</tr></table>");
-        }
-      } catch( Exception e ) { }
-      return sb.toString();
+      return "";
     }
 
   }
@@ -238,8 +231,6 @@ public class PreviewData extends JSONOnlyRequest {
   public class ExistingCSVKey extends TypeaheadInputText<PSetup> {
     public ExistingCSVKey(String name) {
       super(TypeaheadKeysRequest.class, name, true);
-//      addPrerequisite(_parserType);
-//      addPrerequisite(_separator);
     }
 
 
@@ -258,7 +249,6 @@ public class PreviewData extends JSONOnlyRequest {
         if( !key.user_allowed() ) continue;
         String ks = key.toString();
         if (p.toString().contains(", ") && p.toString().contains(ks)){
-          //System.out.println("ks "+ks+" contains in: "+p.toString());
         }else{
           if( !p.matcher(ks).matches() ) // Ignore non-matching keys
             continue;
@@ -309,38 +299,12 @@ public class PreviewData extends JSONOnlyRequest {
         throw new IllegalArgumentException("Invalid parser setup. " + setup.toString());
     }
 
-    private final String keyRow(Key k){
-      return "<tr><td>" + k + "</td></tr>\n";
-    }
-
     @Override
     public String queryComment(){
-      if(!specified())return "";
-      PSetup p = value();
-      StringBuilder sb = new StringBuilder();
-      if(p._keys.size() <= 10){
-        for(Key k:p._keys)
-          sb.append(keyRow(k));
-      } else {
-        int n = p._keys.size();
-        for(int i = 0; i < 5; ++i)
-          sb.append(keyRow(p._keys.get(i)));
-        sb.append("<tr><td>...</td></tr>\n");
-        for(int i = 5; i > 0; --i)
-          sb.append(keyRow(p._keys.get(n-i)));
-      }
-      return
-          "<div class='alert'><b> Found " + p._keys.size() +  " files matching the expression.</b><br/>\n" +
-          "<table>\n" +
-           sb.toString() +
-          "</table></div>";
+      return "";
     }
 
     private Pattern makePattern(String input) {
-      // Reg-Ex pattern match all keys, like file-globbing.
-      // File-globbing: '?' allows an optional single character, regex needs '.?'
-      // File-globbing: '*' allows any characters, regex needs '*?'
-      // File-globbing: '\' is normal character in windows, regex needs '\\'
       String patternStr = input.replace("?",".?").replace("*",".*?").replace("\\","\\\\").replace("(","\\(").replace(")","\\)");
       Pattern p = Pattern.compile(patternStr);
       return p;
@@ -387,64 +351,10 @@ public class PreviewData extends JSONOnlyRequest {
   public class Preview extends Argument {
       Preview(String name) {
       super(name,false);
-//      addPrerequisite(_source);
-//      addPrerequisite(_separator);
-//      addPrerequisite(_parserType);
-//      addPrerequisite(_header);
       setRefreshOnChange();
     }
     @Override protected String queryElement() {
-      // first determine the value to put in the field
-      // if no original value was supplied, use the provided one
-      String[][] data = null;
-      PSetup psetup = _source.value();
-      if(psetup == null)
-        return _source.specified()?"<div class='alert alert-error'><b>Found no valid setup!</b></div>":"";
-      StringBuilder sb = new StringBuilder();
-      if(psetup._failedKeys != null){
-        sb.append("<div class='alert alert-error'>");
-        sb.append("<div>\n<b>Found " + psetup._failedKeys.length + " files which are not compatible with the given setup:</b></div>");
-        int n = psetup._failedKeys.length;
-        if(n > 5){
-          sb.append("<div>" + psetup._failedKeys[0] + "</div>\n");
-          sb.append("<div>" + psetup._failedKeys[1] + "</div>\n");
-          sb.append("<div>...</div>");
-          sb.append("<div>" + psetup._failedKeys[n-2] + "</div>\n");
-          sb.append("<div>" + psetup._failedKeys[n-1] + "</div>\n");
-        } else for(int i = 0; i < n;++i)
-          sb.append("<div>" + psetup._failedKeys[n-1] + "</div>\n");
-        sb.append("</div>\n");
-      }
-      String [] err = psetup._setup._errors;
-      boolean hasErrors = err != null && err.length > 0;
-      boolean parsedOk = psetup._setup._isValid;
-      String parseMsgType = hasErrors?parsedOk?"warning":"error":"success";
-      sb.append("<div class='alert alert-" + parseMsgType + "'><b>" + psetup._setup.toString() + "</b>");
-      if(hasErrors)
-        for(String s:err)sb.append("<div>" + s + "</div>");
-      sb.append("</div>");
-      if(psetup._setup != null)
-        data = psetup._setup._data;
-      //ls
-      String [] header = psetup._setup._setup._columnNames;
-
-      if( data != null ) {
-        sb.append("<table class='table table-striped table-bordered'>");
-        int j = 0;
-        if( psetup._setup._setup._header && header != null) { // Obvious header display, if asked for
-          sb.append("<tr><th>Row#</th>");
-          for( String s : header ) sb.append("<th>").append(s).append("</th>");
-          sb.append("</tr>");
-          if(header == data[0]) ++j;
-        }
-        for( int i=j; i<data.length; i++ ) { // The first few rows
-          sb.append("<tr><td>Row ").append(i-j).append("</td>");
-          for( String s : data[i] ) sb.append("<td>").append(s).append("</td>");
-          sb.append("</tr>");
-        }
-        sb.append("</table>");
-      }
-      return sb.toString();
+      return "";
     }
     @Override protected Object parse(String input) throws IllegalArgumentException {return null;}
     @Override protected Object defaultValue() {return null;}
