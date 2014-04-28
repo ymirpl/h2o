@@ -54,7 +54,7 @@ public class PreviewData extends JSONOnlyRequest {
     JsonArray uris = new JsonArray();
     uris.add(new JsonPrimitive(_key.value().toString()));
     JsonElement parserType  = new JsonPrimitive(_parserType.value().toString());
-    JsonElement headerSeparator  = new JsonPrimitive(_separator.getStringValue());
+    JsonElement headerSeparator  = new JsonPrimitive(_headerSeparator.getStringValue());
     JsonElement dataSeparator  = new JsonPrimitive(_separator.getStringValue());
     JsonElement skipHeader  = new JsonPrimitive(new Boolean(_header.value().toString()));
     JsonElement previewLen = new JsonPrimitive(psetup._setup._data.length);
@@ -88,7 +88,7 @@ public class PreviewData extends JSONOnlyRequest {
     response.add("data_separator", dataSeparator);
     response.add("dont_skip_header", skipHeader);
     if(_hdrFrom != null && _hdrFrom.value() != null){
-      response.add("header_file", new JsonPrimitive(_hdrFrom.value().toString()));
+      response.add("header_file", new JsonPrimitive(_hdrFrom.value()._key.toString()));
     }else{
       response.add("header_file", new JsonPrimitive(""));
     }
