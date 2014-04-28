@@ -2,7 +2,10 @@ package water.api.v2;
 
 import java.io.*;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,8 +32,14 @@ import water.util.Log;
 public class ListUri extends Request {
   private final Str _uri = new Str("uri");
   private final Str _sourceType = new Str("source_type");
+  private String dstTime = "";
 
   @Override protected Response serve() {
+
+    DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+    Date date = new Date();
+    dstTime = "_"+dateFormat.format(date);
+    System.out.println("dstTime: "+dstTime);
 
     if (_sourceType.value().equals("s3")){
       return uploadS3();
@@ -41,7 +50,6 @@ public class ListUri extends Request {
     }else if (_sourceType.value().equals("cluster")){
         return uploadPath();
     }
-
 
     JsonObject json = new JsonObject();
     json.add("uris", new JsonPrimitive(_uri.value()));
@@ -76,8 +84,10 @@ public class ListUri extends Request {
       jObject.add("size", new JsonPrimitive(0));
       urisArray.add(jObject);
       json.add("uris", urisArray);
-      json.add("dst", new JsonPrimitive(k.make().toString()));
-
+      String fileName = k.toString().substring( k.toString().lastIndexOf('/')+1, k.toString().length() );
+      String fileNameWithoutExtn = fileName.substring(0, fileName.lastIndexOf('.'));
+      //json.add("dst", new JsonPrimitive(k.make().toString()));
+      json.add("dst", new JsonPrimitive(fileNameWithoutExtn+dstTime+".hex"));
 
       Response r = Response.custom(json);
       r.setBuilder(KEY, new KeyElementBuilder());
@@ -106,8 +116,10 @@ public class ListUri extends Request {
       JsonArray respArray = new JsonArray();
       JsonObject tmpObj = new JsonObject();
       JsonObject tmpObj2 = new JsonObject();
+      String k = "";
       for (int i=0;i<succ.size();i++){
         tmpObj = (JsonObject) succ.get(i);
+        if (i==0) k = tmpObj.get("key").getAsString();
         tmpObj2.add("uri", tmpObj.get("key"));
         tmpObj2.add("size", tmpObj.get("value_size_bytes"));
         respArray.add(tmpObj2);
@@ -116,7 +128,10 @@ public class ListUri extends Request {
 
       JsonObject json = new JsonObject();
       json.add("uris", respArray);
-      json.add("dst", new JsonPrimitive(Key.make().toString()));
+      //json.add("dst", new JsonPrimitive(Key.make().toString()));
+      String fileName = k.toString().substring( k.toString().lastIndexOf('/')+1, k.toString().length() );
+      String fileNameWithoutExtn = fileName.substring(0, fileName.lastIndexOf('.'));
+      json.add("dst", new JsonPrimitive(fileNameWithoutExtn+dstTime+".hex"));
       Response r = Response.custom(json);
       return r;
   }
@@ -137,14 +152,19 @@ public class ListUri extends Request {
     FileIntegrityChecker.check(new File(_uri.value()),false).syncDirectory(afiles,akeys,afails,adels);
     JsonObject json = new JsonObject();
     JsonArray urisArray = new JsonArray();
+    String k = "";
     for (int i=0;i<afiles.size();i++){
       JsonObject jObject = new JsonObject();
+      if(i==0) k=akeys.get(i);
       jObject.add("uri", new JsonPrimitive(akeys.get(i)));
       jObject.add("size", new JsonPrimitive(0));
       urisArray.add(jObject);
     }
     json.add("uris", urisArray);
-    json.add("dst", new JsonPrimitive(Key.make().toString()));
+    //json.add("dst", new JsonPrimitive(Key.make().toString()));
+    String fileName = k.toString().substring( k.toString().lastIndexOf('/')+1, k.toString().length() );
+    String fileNameWithoutExtn = fileName.substring(0, fileName.lastIndexOf('.'));
+    json.add("dst", new JsonPrimitive(fileNameWithoutExtn+dstTime+".hex"));
     return Response.custom(json);
   }
 
@@ -164,7 +184,11 @@ public class ListUri extends Request {
       processListing(currentList, succ, fail);
     }
     json.add("uris", succ);
-    json.add("dst", new JsonPrimitive(Key.make().toString()));
+    //json.add("dst", new JsonPrimitive(Key.make().toString()));
+    String k = ((JsonObject)succ.get(0)).get("uri").toString();
+    String fileName = k.toString().substring( k.toString().lastIndexOf('/')+1, k.toString().length() );
+    String fileNameWithoutExtn = fileName.substring(0, fileName.lastIndexOf('.'));
+    json.add("dst", new JsonPrimitive(fileNameWithoutExtn+dstTime+".hex"));
     DKV.write_barrier();
     Response r = Response.custom(json);
     //r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());
