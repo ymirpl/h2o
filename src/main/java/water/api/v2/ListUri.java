@@ -103,19 +103,21 @@ public class ListUri extends Request {
         return Response.error(e);
       }
       DKV.write_barrier();
+      JsonArray respArray = new JsonArray();
+      JsonObject tmpObj = new JsonObject();
+      JsonObject tmpObj2 = new JsonObject();
+      for (int i=0;i<succ.size();i++){
+        tmpObj = (JsonObject) succ.get(i);
+        tmpObj2.add("uri", tmpObj.get("key"));
+        tmpObj2.add("size", tmpObj.get("value_size_bytes"));
+        respArray.add(tmpObj2);
+      }
+
+
       JsonObject json = new JsonObject();
-      /*json.add(NUM_SUCCEEDED, new JsonPrimitive(succ.size()));
-      json.add(SUCCEEDED, succ);
-      json.add(NUM_FAILED, new JsonPrimitive(fail.size()));
-      json.add(FAILED, fail);*/
-      json.add("uris", succ);
+      json.add("uris", respArray);
       json.add("dst", new JsonPrimitive(Key.make().toString()));
-      Response r = Response.done(json);
-      r.setBuilder(SUCCEEDED + "." + KEY, new KeyCellBuilder());
-      // Add quick link
-      if (succ.size() > 1)
-        r.addHeader("<div class='alert'>" //
-            + Parse.link("*"+pstr+"*", "Parse all into hex format") + " </div>");
+      Response r = Response.custom(json);
       return r;
   }
 
