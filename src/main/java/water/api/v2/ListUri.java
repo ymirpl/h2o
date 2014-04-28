@@ -119,6 +119,7 @@ public class ListUri extends Request {
       for (int i=0;i<succ.size();i++){
         tmpObj = (JsonObject) succ.get(i);
         if (i==0) k = tmpObj.get("key").getAsString();
+        tmpObj2 = new JsonObject();
         tmpObj2.add("uri", tmpObj.get("key"));
         tmpObj2.add("size", tmpObj.get("value_size_bytes"));
         respArray.add(tmpObj2);
