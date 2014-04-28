@@ -60,7 +60,7 @@
 								chosen
 								data-placeholder="Select file with header"
 								ng-model="ParseSettingsService.headerFile"
-								ng-options="f.key as (f.lastPathComponent() | pathEllipsis:35) for f in ParseSettingsService.files | filter:{excluded:false}">
+								ng-options="f.key as (f.lastPathComponent() | pathEllipsis:35) for f in filesAndHeaders">
 						</select>
 
 						<a  class="button overlay-File_upload_open"
@@ -103,8 +103,8 @@
 													       ng-model="ParseSettingsService.skipHeader"> Skip header
 												</label><!-- /end 'Header options' - skip header -->
 											</td>
-											<td>Header separator</td>
-											<td>
+											<td ng-show="ParseSettingsService.headerFromOutsideBasicFileList()">Header separator</td>
+											<td ng-show="ParseSettingsService.headerFromOutsideBasicFileList()">
 												<label>
 													<autoradio model="ParseSettingsService.headerSeparator"
 															   checked-if-value="','"
@@ -112,7 +112,7 @@
 													Comma
 												</label>
 											</td>
-											<td>
+											<td ng-show="ParseSettingsService.headerFromOutsideBasicFileList()">
 												<label>
 													<autoradio model="ParseSettingsService.headerSeparator"
 															   checked-if-value="';'"
@@ -120,7 +120,7 @@
 													Semicolon
 												</label>
 											</td>
-											<td>
+											<td ng-show="ParseSettingsService.headerFromOutsideBasicFileList()">
 												<label>
 													<autoradio model="ParseSettingsService.headerSeparator"
 															   checked-if-value="'\t'"
@@ -128,7 +128,7 @@
 													Tab
 												</label>
 											</td>
-											<td>
+											<td ng-show="ParseSettingsService.headerFromOutsideBasicFileList()">
 													<autoradio model="ParseSettingsService.headerSeparator"
 															   checked-if-value-not-in="[',',';','\t']" />
 													<select data-placeholder="other"
