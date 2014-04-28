@@ -74,9 +74,9 @@ public class ListUri extends Request {
       JsonObject jObject = new JsonObject();
       jObject.add("uri", new JsonPrimitive(k.toString()));
       jObject.add("size", new JsonPrimitive(0));
-      jObject.add("dst", new JsonPrimitive(k.make().toString()));
       urisArray.add(jObject);
       json.add("uris", urisArray);
+      json.add("dst", new JsonPrimitive(k.make().toString()));
 
 
       Response r = Response.custom(json);
