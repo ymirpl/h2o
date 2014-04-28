@@ -23,7 +23,9 @@ public class PreviewData extends JSONOnlyRequest {
   private   final Separator      _headerSeparator = new Separator("header_separator");
   private   final Bool           _header    = new Bool("dont_skip_header",false,"Use first line as a header");
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
-  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
+  protected final Bool           _userSetColumnNames   = new Bool("user_set_column_names",false, "");
+  //protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
+  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_file",false);
   protected final Str            _excludeExpression    = new Str("exclude","");
   protected final ExistingCSVKey _source    = new ExistingCSVKey(URIS);//SOURCE_KEY
   protected final H2OKey         _key       = new H2OKey(URIS,true);//SOURCE_KEY
@@ -46,7 +48,8 @@ public class PreviewData extends JSONOnlyRequest {
     JsonObject parserConfig = new JsonObject();
     PSetup psetup = _source.value();
 
-    _columns.changeColumnNames(psetup);
+    if (_userSetColumnNames.value())
+      _columns.changeColumnNames(psetup);
 
     JsonArray uris = new JsonArray();
     uris.add(new JsonPrimitive(_key.value().toString()));
@@ -234,9 +237,7 @@ public class PreviewData extends JSONOnlyRequest {
 
 
     @Override protected PSetup parse(String input) throws IllegalArgumentException {
-      System.out.println("parse");
       Pattern p = makePattern(input);
-      System.out.println("p: "+p);
       Pattern exclude = null;
       if(_hdrFrom.specified())
         _header.setValue(true);
