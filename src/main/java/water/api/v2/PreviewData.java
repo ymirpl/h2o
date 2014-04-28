@@ -83,7 +83,7 @@ public class PreviewData extends JSONOnlyRequest {
     response.add("parser_type", parserType);
     response.add("header_separator", headerSeparator);
     response.add("data_separator", dataSeparator);
-    response.add("skip_header", skipHeader);
+    response.add("dont_skip_header", skipHeader);
     if(_hdrFrom != null && _hdrFrom.value() != null){
       response.add("header_file", new JsonPrimitive(_hdrFrom.value().toString()));
     }else{
