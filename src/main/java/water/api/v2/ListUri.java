@@ -39,7 +39,6 @@ public class ListUri extends Request {
     DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
     Date date = new Date();
     dstTime = "_"+dateFormat.format(date);
-    System.out.println("dstTime: "+dstTime);
 
     if (_sourceType.value().equals("s3")){
       return uploadS3();
