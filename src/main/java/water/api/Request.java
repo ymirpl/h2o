@@ -148,7 +148,11 @@ public abstract class Request extends RequestBuilders {
   }
 
   protected NanoHTTPD.Response wrap(NanoHTTPD server, JsonObject response) {
-    return server.new Response(NanoHTTPD.HTTP_OK, NanoHTTPD.MIME_JSON, response.toString());
+    String statusCode = NanoHTTPD.HTTP_OK;
+    if (response.has("error")) {
+      statusCode = NanoHTTPD.HTTP_BADREQUEST;
+    }
+    return server.new Response(statusCode, NanoHTTPD.MIME_JSON, response.toString());
   }
 
   protected NanoHTTPD.Response wrap(NanoHTTPD server, String value, RequestType type) {
