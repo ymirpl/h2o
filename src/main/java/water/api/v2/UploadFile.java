@@ -18,10 +18,10 @@ import water.api.RequestServer.API_VERSION;
 
     @Override protected Response serve() {
       JsonObject response = new JsonObject();
-      response.addProperty("dst", key.value().toString());
-      //response.add("uri", new JsonPrimitive(key.toString()));
-      //response.add("size", new JsonPrimitive(0));
-      //response.add("dst", new JsonPrimitive(Key.make().toString()));
+      //response.addProperty("dst", key.value().toString());
+      response.add("uri", new JsonPrimitive(key.toString()));
+      response.add("size", new JsonPrimitive(0));
+      response.add("dst", new JsonPrimitive(Key.make().toString()));
       return Response.custom(response);
     }
   }
