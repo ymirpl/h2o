@@ -24,11 +24,13 @@ public class Parser extends Request {
   private   final Separator      _headerSeparator = new Separator("header_separator");
   private   final Bool           _header    = new Bool("dont_skip_header",false,"Use first line as a header");
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
-  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
+  protected final Bool           _userSetColumnNames   = new Bool("user_set_column_names",false, "");
+  //protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
+  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_file",false);
   protected final Str            _excludeExpression    = new Str("exclude","");
   protected final ExistingCSVKey _source    = new ExistingCSVKey(URIS);//SOURCE_KEY
   protected final H2OKey         _key       = new H2OKey(URIS,true);//SOURCE_KEY
-  protected final H2OKey         _headerKey = new H2OKey("header_file",false);//SOURCE_KEY
+  //protected final H2OKey         _headerKey = new H2OKey("header_file",false);//SOURCE_KEY
   protected final NewH2OHexKey   _dest      = new NewH2OHexKey("dst");
   protected final Bool           _blocking  = new Bool("blocking",false,"Synchronously wait until parse completes");
   protected final Columns        _columns   = new Columns("columns");
