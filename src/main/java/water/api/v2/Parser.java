@@ -22,7 +22,7 @@ public class Parser extends Request {
   private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
   private   final Separator      _separator = new Separator("data_separator");
   private   final Separator      _headerSeparator = new Separator("header_separator");
-  private   final Bool           _header    = new Bool("skip_header",false,"Use first line as a header");
+  private   final Bool           _header    = new Bool("dont_skip_header",false,"Use first line as a header");
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
   protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
   protected final Str            _excludeExpression    = new Str("exclude","");
