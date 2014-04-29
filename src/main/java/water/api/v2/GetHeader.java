@@ -55,7 +55,7 @@ public class GetHeader extends JSONOnlyRequest {
 
     json.add("uri", new JsonPrimitive(_uri.value()));
     json.add("headers", jHRowArray);
-    json.add("header_separator", new JsonPrimitive(_separator.value()));
+    json.add("header_separator", new JsonPrimitive(_separator.getStringValue()));
 
     return Response.custom(json);
 
