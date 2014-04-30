@@ -26,7 +26,8 @@ public class Parser extends Request {
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
   protected final Bool           _userSetColumnNames   = new Bool("user_set_column_names",false, "");
   //protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
-  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_file",false);
+  protected final HeaderKey      _hdrFrom   = new HeaderKey("header_file_old",false);
+  protected final Str      _hdrFromNew   = new Str("header_file");
   protected final Str            _excludeExpression    = new Str("exclude","");
   protected final ExistingCSVKey _source    = new ExistingCSVKey(URIS);//SOURCE_KEY
   protected final H2OKey         _key       = new H2OKey(URIS,true);//SOURCE_KEY
@@ -295,7 +296,7 @@ public class Parser extends Request {
     @Override protected String[] selectNames()      { System.out.println("DEFAULT_DELIMS: "+DEFAULT_DELIMS.toString()); return DEFAULT_DELIMS; }
     @Override protected Byte     defaultValue()     {return CsvParser.AUTO_SEP;}
     public void setValue(Byte b){record()._value = b;}
-    public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ""; }
+    public String getStringValue(){ return record() != null ? String.valueOf((char)((record()._value&0x00FF))) : ","; }
     @Override protected String selectedItemValue(){ return value() != null ? value().toString() : defaultValue().toString(); }
     @Override protected Byte parse(String input) throws IllegalArgumentException {
       Byte result = input.getBytes()[0];//Byte.valueOf(input);

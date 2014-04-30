@@ -19,8 +19,7 @@ import water.parser.*;
 public class GetHeader extends JSONOnlyRequest {
 
   private   final ParserType     _parserType= new ParserType(PARSER_TYPE);
-  private   final Separator      _separator = new Separator("data_separator");
-  private   final Separator      _headerSeparator = new Separator("header_separator");
+  private   final Separator      _separator = new Separator("header_separator");
   private   final Bool           _header    = new Bool("skip_header",false,"Use first line as a header");
   protected final Bool           _sQuotes   = new Bool("single_quotes",false,"Enable single quotes as field quotation character");
   protected final HeaderKey      _hdrFrom   = new HeaderKey("header_from_file",false);
@@ -59,6 +58,10 @@ public class GetHeader extends JSONOnlyRequest {
 
     return Response.custom(json);
 
+  }
+
+  public String test(){
+    return "TESTTTTTTTTT";
   }
 
   @Override protected String href(API_VERSION v) {
